@@ -1,0 +1,23 @@
+#+Title: Sorting in different algorithms and languages
+#+Author: Eric Schulte
+
+* Cross Comparison
+
+|                        | Byte | ASM | C |
+|------------------------+------+-----+---|
+| size of implementation |      |     |   |
+| mutational  robustness |      |     |   |
+| speed of evaluation    |      |     |   |
+| repair                 |      |     |   |
+| reach-ability          |      |     |   |
+
+** Size of Implementation
+** Mutational Robustness
+** Speed of Evaluation
+** Repair
+** Reach-ability
+
+* Notes
+** Direct Compilation
+** ASM Compilation
+** Cil Processing
