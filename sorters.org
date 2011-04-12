@@ -19,5 +19,11 @@
 
 * Notes
 ** Direct Compilation
+#+begin_src sh :results silent
+  for i in `ls src/*.c`;do
+      gcc -o src/`basename $i .c` $i
+  done
+#+end_src
+
 ** ASM Compilation
 ** Cil Processing
