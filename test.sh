@@ -6,10 +6,9 @@
 #
 # mark each passed test with a line in $2
 #
-rm -rf $2
 for i in `seq 10`; do
     cat test/$i.in |xargs ./limit $1 >& $i.my
-    diff -wBq test/$i.out $i.my && (echo "passed $i" >> $2)
+    diff -wBq test/$i.out $i.my >& /dev/null && echo "passed $i"
     rm -rf $i.my
 done
 exit 0
