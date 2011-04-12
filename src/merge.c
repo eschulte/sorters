@@ -2,60 +2,27 @@
 #include <stdlib.h>
 #include <string.h>
  
-int *locmerge(int *l, unsigned int ll,
-	      int *r, unsigned int lr)
-{
-  int *result;
-  unsigned int il, ir, ires;
+void merge (int *a, int *b, int n) {
+  int i, *x, *p, *q;
+  x = malloc(n * sizeof (int));
+  for (i = 0, p = a, q = b; i < n; i++) 
+    x[i] = p == b     ? *q++
+      : q == a + n ? *p++
+      : *p < *q    ? *p++
+      :              *q++;
+  memcpy(a, x, n * sizeof (int));
+  free(x);
+}   
  
-  il = ir = ires = 0;
- 
-  result = malloc(sizeof(int)*(ll+lr));
-  while ( (ll > 0) && ( lr > 0 ) ) {
-    if ( l[il] <= r[ir] ) {
-      result[ires++] = l[il++]; ll--;
-    } else {
-      result[ires++] = r[ir++]; lr--;
-    }
-  }
-  if ( ll > 0 ) {
-    memcpy(&result[ires], &l[il], sizeof(int)*ll);
-  }
-  if ( lr > 0 ) {
-    memcpy(&result[ires], &r[ir], sizeof(int)*lr);
-  }
-  return result;
-}
- 
- 
-int *mergesort(int *list, unsigned int l)
-{
-  unsigned int middle;
-  int *tleft, *tright, *result, *left, *right;
- 
-  if ( l < 2 ) return list;
-  middle = l / 2;
-  tleft = malloc(sizeof(int)*(l - middle));
-  tright = malloc(sizeof(int)*middle);
-  memcpy(tleft, list, sizeof(int)*(l-middle));
-  memcpy(tright, list+(l-middle), sizeof(int)*middle);
-  left = mergesort(tleft, l-middle);
-  right = mergesort(tright, middle);
-  if (left[l-middle-1] <= right[0])
-    result = list;
-  else
-    result = locmerge(left, l-middle, right, middle);
-  if ( tleft == left ) {
-    free(left);
-  } else {
-    free(left); free(tleft);
-  }
-  if ( tright == right ) {
-    free(right);
-  } else {
-    free(right); free(tright);
-  }
-  return result;
+void merge_sort (int *a, int n) {
+  int *b, m;
+  if (n < 2)
+    return;
+  m = n / 2;
+  b = a + m;
+  merge_sort(a, m);
+  merge_sort(b, n - m);
+  merge(a, b, n);
 }
 
 int main(int argc, char *argv[]) {
@@ -64,7 +31,7 @@ int main(int argc, char *argv[]) {
   int i;
   for(i=1;i<argc;i++)
     lst[i-1] = atoi(argv[i]);
-  lst = mergesort(lst, argc-1);
+  merge_sort(lst, argc-1);
   for(i=1;i<argc;i++)
     printf("%d ", lst[i-1]);
   printf("\n");
