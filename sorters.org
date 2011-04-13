@@ -25,5 +25,17 @@
   done
 #+end_src
 
+** oprofiling sampling
+with oprofile running...
+#+begin_src sh
+  for i in `ls src/*.c`;do
+      binary=src/`basename $i .c`
+      for i in `seq 10000`;do
+          ./test.sh $binary > /dev/null
+      done
+      opannotate --assembly $binary > /tmp/`basename $binary`.path
+  done
+#+end_src
+
 ** ASM Compilation
 ** Cil Processing
