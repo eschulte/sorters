@@ -1,4 +1,5 @@
 limit
 out
 results
-
+run.*
+gen.*
