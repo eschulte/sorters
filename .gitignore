@@ -1,5 +1,13 @@
+## compiled scripts
 limit
+
+## execution traces
+src/*.path
+src/*.disasm
+
+## results
 out
 results
 run.*
 gen.*
+
