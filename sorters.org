@@ -1,20 +1,7 @@
 #+Title: Sorting in different algorithms and languages
 #+Author: Eric Schulte
 
-* Notes
-** oprofiling sampling
-with oprofile running...
-#+begin_src sh
-  for i in `ls src/*.c`;do
-      binary=src/`basename $i .c`
-      for i in `seq 10000`;do
-          ./test.sh $binary > /dev/null
-      done
-      opannotate --assembly $binary > /tmp/`basename $binary`.path
-  done
-#+end_src
-
-** Compilation
+* Compilation
 | c   | gcc -S <asm> <src>    |
 | cpp | g++ -S <asm> <src>    |
 | hs  | ghc -S <asm> <src>    |
@@ -24,7 +11,7 @@ with oprofile running...
 This [[http://factor-language.blogspot.com/2010/05/comparing-factors-performance-against.html][blog post]] has some information on compiling executable from sbcl
 and factor.
 
-*** asm
+** asm
 #+begin_src sh
   #!/bin/bash
   TMP=`echo $3|sed 's/\(.*\)\..*/\1/'`
@@ -33,7 +20,7 @@ and factor.
       rm -f $TMP.o
 #+end_src
 
-*** ocaml
+** ocaml
 good discussion of Ocaml types with lots of example assembly
 http://www.ocaml-tutorial.org/performance_and_profiling
 
@@ -49,7 +36,7 @@ http://www.ocaml-tutorial.org/performance_and_profiling
   gcc -o $2 '-L/usr/lib/ocaml' '/home/eschulte/research/epr/asm/sorters/sort-rb/src/insertion-ml.startup.s' '/usr/lib/ocaml/std_exit.o' $3 '/usr/lib/ocaml/stdlib.a' '/usr/lib/ocaml/libasmrun.a' -lm  -ldl
 #+end_src
 
-*** sbcl
+** sbcl
 This recipe works, although I'm not sure it counts as an executable
 1) compile the lisp file into a .core file
    : sbcl --userinit /dev/null --load bubble.sbcl_compile
@@ -81,13 +68,13 @@ This recipe works, although I'm not sure it counts as an executable
   
   time sbcl --dynamic-space-size 500 --noinform --core nbody.core --userinit /dev/null --load nbody.sbcl_run 1000000
 #+end_src
-*** racket
+** racket
 http://docs.racket-lang.org/raco/exe.html
 
 can be done with some subset of the racket executable
 : raco exe bubble.rkt
 
-*** lua -- can be done through C
+** lua -- can be done through C
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
