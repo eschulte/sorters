@@ -1,30 +1,7 @@
 #+Title: Sorting in different algorithms and languages
 #+Author: Eric Schulte
 
-* Cross Comparison
-
-|                        | Byte | ASM | C |
-|------------------------+------+-----+---|
-| size of implementation |      |     |   |
-| mutational  robustness |      |     |   |
-| speed of evaluation    |      |     |   |
-| repair                 |      |     |   |
-| reach-ability          |      |     |   |
-
-** Size of Implementation
-** Mutational Robustness
-** Speed of Evaluation
-** Repair
-** Reach-ability
-
 * Notes
-** Direct Compilation
-#+begin_src sh :results silent
-  for i in `ls src/*.c`;do
-      gcc -o src/`basename $i .c` $i
-  done
-#+end_src
-
 ** oprofiling sampling
 with oprofile running...
 #+begin_src sh
@@ -37,5 +14,80 @@ with oprofile running...
   done
 #+end_src
 
-** ASM Compilation
-** Cil Processing
+** Compilation
+| c   | gcc -S <asm> <src>    |
+| cpp | g++ -S <asm> <src>    |
+| hs  | ghc -S <asm> <src>    |
+| ml  | ocamlc -o             |
+| fs  | see [[http://concatenative.org/wiki/view/Factor/Deployment][Factor/Deployment]] |
+
+This [[http://factor-language.blogspot.com/2010/05/comparing-factors-performance-against.html][blog post]] has some information on compiling executable from sbcl
+and factor.
+
+*** asm
+#+begin_src sh
+  #!/bin/bash
+  TMP=`echo $3|sed 's/\(.*\)\..*/\1/'`
+  as -o $TMP.o $3 && \
+      ld $TMP.o -o $2 && \
+      rm -f $TMP.o
+#+end_src
+
+*** ocaml
+good discussion of Ocaml types with lots of example assembly
+http://www.ocaml-tutorial.org/performance_and_profiling
+
+1) first generate the required .s and startup files
+   : ocamlopt -dstartup -S bubble.ml
+2) then find out what flags ocamlopt is passing to gcc
+   : ocamlopt -verbose
+3) call gcc on the startup and .s file, as well as the ocaml libraries
+   copied from the verbose output of ocamlopt -verbose, e.g. 
+   : gcc -o bub '-L/usr/lib/ocaml' 'a.out.startup.s' '/usr/lib/ocaml/std_exit.o' 'bubble.s' '/usr/lib/ocaml/stdlib.a' '/usr/lib/ocaml/libasmrun.a' -lm  -ldl
+
+#+begin_src sh :shebang=#!/bin/bash :tangle fake-gcc
+  gcc -o $2 '-L/usr/lib/ocaml' '/home/eschulte/research/epr/asm/sorters/sort-rb/src/insertion-ml.startup.s' '/usr/lib/ocaml/std_exit.o' $3 '/usr/lib/ocaml/stdlib.a' '/usr/lib/ocaml/libasmrun.a' -lm  -ldl
+#+end_src
+
+*** sbcl
+This recipe works, although I'm not sure it counts as an executable
+1) compile the lisp file into a .core file
+   : sbcl --userinit /dev/null --load bubble.sbcl_compile
+2) run the core file
+   : sbcl --dynamic-space-size 500 --noinform --core bubble.core --userinit /dev/null --load bubble.sbcl_run
+
+#+begin_src lisp
+  (handler-bind
+   ((sb-ext:defconstant-uneql (lambda (c) (abort c))))
+   (load (compile-file "nbody.sbcl" )))
+  (save-lisp-and-die "nbody.core" :purify t)
+#+end_src
+#+begin_src sh
+  ln -s ~/perf/shootout/bench/nbody/nbody.sbcl .
+  
+  cat > nbody.sbcl_compile <<EOF
+  (proclaim '(optimize (speed 3) (safety 0) (debug 0) (compilation-speed 0) (space 0)))
+  (handler-bind ((sb-ext:defconstant-uneql (lambda (c) (abort c))))
+    (load (compile-file "nbody.sbcl" )))
+  (save-lisp-and-die "nbody.core" :purify t)
+  EOF
+  
+  sbcl --userinit /dev/null --load nbody.sbcl_compile
+  
+  cat > nbody.sbcl_run <<EOF
+  (proclaim '(optimize (speed 3) (safety 0) (debug 0) (compilation-speed 0) (space 0)))
+  (main) (quit)
+  EOF
+  
+  time sbcl --dynamic-space-size 500 --noinform --core nbody.core --userinit /dev/null --load nbody.sbcl_run 1000000
+#+end_src
+*** racket
+http://docs.racket-lang.org/raco/exe.html
+
+can be done with some subset of the racket executable
+: raco exe bubble.rkt
+
+*** lua -- can be done through C
+http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
+: luac script.lua -o script.luac
+: bin2c script.luac > code.c
