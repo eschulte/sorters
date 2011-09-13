@@ -16,3 +16,6 @@ gen.*
 runs
 *.conf
 *.my
+
+## archives
+*.tar.bz2
