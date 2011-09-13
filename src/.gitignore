@@ -3,3 +3,7 @@ insertion
 merge
 merge-broke
 quick
+*.s
+*.cmi
+*.cmx
+*.hi
