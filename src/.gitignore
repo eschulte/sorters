@@ -8,6 +8,9 @@ quick
 *.cmx
 *.hi
 *.samp
+*.map
+*.addrs
+*.path
 bubble-c
 bubble-cpp
 bubble-hs
