@@ -11,8 +11,8 @@ replace-ops
 # use statements in coverage.path for pos/neg weights
 --fault-scheme line
 --fix-scheme line
---fault-file replace-prog.replace-lang.path
---fix-file replace-prog.replace-lang.path
+--fault-file src/replace-prog-replace-lang.path
+--fix-file src/replace-prog-replace-lang.path
 
 # for post-processing to remove duplicates of the original
 --print-source-name

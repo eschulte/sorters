@@ -10,6 +10,7 @@ for config in *.conf;do
     for sub in $config src test test.sh limit;do cp -R $base/$sub $name/; done
     cd $name
     echo -n "in $(pwd) "
-    echo "nice repair $config &"
+    nice repair $config &
+    disown %1
     cd ../$base
 done
