@@ -15,6 +15,13 @@ gen.*
 runs
 *.conf
 *.my
+00*
+*.path
+*.s
+coverage*
+*.debug.*
+*.cache
+repair*
 
 ## archives
 *.tar.bz2
