@@ -15,7 +15,7 @@ gen.*
 runs
 *.conf
 *.my
-00*
+0*
 *.path
 *.s
 coverage*
