@@ -6,8 +6,12 @@ for config in *.conf;do
     name=$(basename $config .conf)
     echo $name
     cd ../
-    mkdir $name
-    for sub in $config src test test.sh limit;do cp -R $base/$sub $name/; done
+    if [ -d $name ];then
+      cp $base/$config $name/$config
+    else
+      mkdir $name
+      for sub in $config src test test.sh limit;do cp -R $base/$sub $name/; done
+    fi
     cd $name
     echo -n "in $(pwd) "
     nice repair $config &
