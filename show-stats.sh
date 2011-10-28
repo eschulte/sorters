@@ -1,6 +1,8 @@
 #!/bin/sh
 debug=$1
+tar=$2
 pops=$(cat $debug|egrep "pop\[")
+sizes=$(cat $debug|egrep "^sizes"|sed 's/sizes://')
 orig_size=$(cat $debug|egrep -m 1 "stmt_count|asm: lines"|awk '{print $4}')
 
 robustness()
@@ -16,20 +18,20 @@ length()
 {
 IFS="
 "
-for pop in $(echo "$1"|sed 's/  /\t/g;s/ //g;s/\t/ /g;s/^.\+://');do
-    IFS=" "
-    for ind in $pop;do
-        echo "$orig_size $ind"|sed 's/([[:digit:],]\+)//g;s/a/ + 1/g;s/d/ - 1/g;s/s//g'|bc
-    done |awk '{sum=sum+$1}END{print sum/NR}'
+for pop in $(echo "$1");do
+    echo "$pop"|tr ' ' '\n'|awk '{sum=sum+$1}END{print sum/NR}'
 done |awk '{print NR " " $1}'
 }
 
+# under construction -- not used
 unique()
 {
-    # build a history string to file hash mapping
     hash_file=$(mktemp /tmp/hashes.XXXXXX)
     map_file=$(mktemp /tmp/hists.XXXXXX)
-    sha1sum 00*|awk '{print $2 " " $1}'|sort >$hash_file
+    for i in $(tar tf $tar|egrep -v "\.s");do
+        hash=$(tar xfO insertion-c.tar $i|sha1sum|awk '{print $1}')
+        echo "$i $hash"
+    done > $hash_file
     cat $debug|egrep "^[[:space:]]+10"|awk '{print $3 " " $2}'|sort|join $hash_file - >$map_file
     IFS="
 "
@@ -45,11 +47,6 @@ rb=$(mktemp /tmp/robustness.XXXXXX)
 robustness "$pops" > $rb
 
 ln=$(mktemp /tmp/lengths.XXXXXX)
-length "$pops" > $ln
+length "$sizes" > $ln
 
 join $rb $ln
-
-# uq=$(mktemp /tmp/uniques.XXXXXX)
-# unique > $$uq
-
-# join $rb $ln|join $uq -
