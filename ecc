@@ -1,0 +1,4 @@
+#!/bin/sh
+cp $1 $2 && chmod +x $2
+echo "1:$1 2:$2" >> /tmp/ecc
+exit 0

@@ -7,3 +7,4 @@ rm -rf coverage.pos.d coverage.pos coverage.neg.d coverage.neg
 rm -f repair.*
 rm -f coverage.
 rm -f internal/*cache source/*cache
+rm -f *.my
