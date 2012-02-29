@@ -28,3 +28,8 @@ repair*
 
 ## NFS
 .nfs*
+
+## recent running cruft
+insertion.c
+sort
+trace

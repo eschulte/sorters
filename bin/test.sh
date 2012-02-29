@@ -2,17 +2,10 @@
 #
 # $1 executable
 # $2 test to run
-# $3 optional limit script
 #
 prog=$1
-if [ -z $3 ];then
-    limit="./limit";
-else
-    limit="$3";
-fi
-
 run(){
-if [ "$($limit $prog $1)" = "$2" ];then
+if [ "$(./limit $prog $1)" = "$2" ];then
     exit 0;
 fi
 }
