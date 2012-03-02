@@ -14,29 +14,27 @@
 ;; apply good path samples
 (apply-path original :pos (samples-from-tracer-file "trace"))
 
-;; walk away from the original program in genome space
-(defvar *walks* nil)
-
-(setf *walks* nil)
-
-(progn ;; actual execution of the walk
-  (dotimes (n 1000)
-    (push (let ((ant (asm-from-file "insertion.s")) walk)
-            (dotimes (_ 100)
-              (let ((fitness (fitness ant)) neighbors)
-                (dotimes (_ 10)
-                  (let ((neighbor (copy ant)))
-                    (mutate neighbor)
-                    (push `((:fitness . ,(fitness neighbor))
-                            (:history . ,(history neighbor))) neighbors)))
-                (push `((:size      . ,(length (genome ant)))
-                        (:fitness   . ,fitness)
-                        (:history   . ,(history ant))
-                        (:neighbors . ,neighbors)) walk)
-                (mutate ant)))
-            walk) *walks*)
-    (store (car *walks*) (format nil "walk_~S.store" n)))
-  (store *walks* #P"walks.store"))
+
+;;; experimentation
+(defun do-random-walk (dir &key (walks 1000) (steps 100))
+  "Run a series of random walks saving results to DIR."
+  (dotimes (n walks)
+    (store
+     (let ((ant (asm-from-file "insertion.s")) walk)
+       (dotimes (_ steps)
+         (let ((fitness (fitness ant)) neighbors)
+           (dotimes (_ 10)
+             (let ((neighbor (copy ant)))
+               (mutate neighbor)
+               (push `((:fitness . ,(fitness neighbor))
+                       (:history . ,(history neighbor))) neighbors)))
+           (push `((:size      . ,(length (genome ant)))
+                   (:fitness   . ,fitness)
+                   (:history   . ,(history ant))
+                   (:neighbors . ,neighbors)) walk)
+           (mutate ant)))
+       walk)
+     (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
 
 ;; analysis
@@ -86,11 +84,11 @@
 
 (defvar *walks*
   (loop :for i :from 0 :upto 999 :collect
-     (walk-stats (restore (format nil "../walks/walk_~a.store" i))))
+     (walk-stats (restore (format nil "results/rand-walks/walk_~a.store" i))))
   "The raw walk data read directly from what is stored to disk.")
 
 (defvar *stats*
   (by-step *walks*)
   "Statistics describing the walk data organized by step.")
 
-(to-file *stats* "/tmp/walks.txt")
+(to-file *stats* "results/rand-walks/stats.txt")
