@@ -38,13 +38,13 @@
 (defun do-random-walk (dir &key (walks 1000) (steps 100))
   "Run a series of random walks saving results to DIR."
   (dotimes (n walks)
-    (store (let ((ant (copy original)))
+    (store (let ((ant (asm-from-file "insertion.s")))
              (repeatedly steps (prog1 (ant-stats ant) (mutate ant))))
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
-(defun do-neutral-walk (dir &key (popsize 1000) (steps 100))
+(defun do-neutral-walk (dir &key (popsize 100) (steps 1000))
   "Run a series of neutral walk saving results to DIR."
-  (let ((pop (repeatedly popsize (let ((ant (copy original)))
+  (let ((pop (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
                                    (mutate ant) ant))))
     (dotimes (n steps)
       (store (mapcar #'ant-stats pop)
