@@ -7,9 +7,12 @@
 ;; general configuration settings
 (setq *pos-test-num* 10)
 (setq *neg-test-num* 0)
-(setq *test-script* "test.sh")
+(setq *test-script* "./test.sh")
 (setq *genome-averaging-keys* '(:pos))
 (setq original (asm-from-file "insertion.s"))
+
+(unless (= 10 (fitness original))
+  (error "Failed sanity check: ~s!=10" (fitness original)))
 
 ;; apply good path samples
 (apply-path original :pos (samples-from-tracer-file "trace"))
