@@ -51,7 +51,7 @@
              (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
       (setf pop (mapcar (lambda (ant)
                           (mutate ant)
-                          (if (= 10 (fitness ant)) ant (random-elt pop)))
+                          (if (= 10 (fitness ant)) ant (copy (random-elt pop))))
                         pop)))))
 
 #+run-neutral-walk
