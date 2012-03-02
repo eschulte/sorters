@@ -54,6 +54,9 @@
                           (if (= 10 (fitness ant)) ant (random-elt pop)))
                         pop)))))
 
+#+run-neutral-walk
+(do-neutral-walk "results/neut-walk/")
+
 
 ;; analysis
 (defun aget (key lst) (cdr (assoc key lst)))
@@ -92,7 +95,7 @@
   "Dump steps to file as tab separated text."
   (with-open-file (out file :direction :output)
     (loop :for step :in *stats* :do
-       (format out "~&~a ~a ~a ~a ~a ~a"
+       (format out "~&~f ~f ~f ~f ~f ~f"
                (car (aget :fitness step))
                (cdr (aget :fitness step))
                (car (aget :size step))
@@ -100,7 +103,9 @@
                (car (aget :mut-rb step))
                (cdr (aget :mut-rb step))))))
 
-#+run-analysis
+(defvar *walks* nil)
+
+#+analysis-random-walk-results
 (progn
   (defvar *walks*
     (loop :for i :from 0 :upto 999 :collect
