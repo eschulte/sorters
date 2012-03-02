@@ -63,21 +63,17 @@
 (defun getter (key) (lambda (it) (aget key it)))
 (defun transpose (matrix) (apply #'map 'list #'list matrix))
 
-(defun step-neighbor-stats (step)
-  "Given a step, return (mut-rb ave-neighbor-fitness)."
-  (let ((neutral 0) (average 0))
-    (mapc (lambda (fitness)
-            (when (= 10 fitness) (incf neutral))
-            (incf average fitness))
-          (mapcar (lambda (n) (cdr (assoc :fitness n))) step))
-    (list neutral (/ average 10))))
+(defun step-mut-rb (step)
+  "Return the mutational robustness of a step from its neighbors."
+  (/ (count 10 (mapcar (getter :fitness) (aget :neighbors step))) 10))
 
 (defun walk-stats (walk)
   "Return per-step alists of size, fitness, `step-neighbor-stats'. "
   (mapcar (lambda (step)
-            (setf (cdr (assoc :neighbors step))
-                  (step-neighbor-stats (cdr (assoc :neighbors step))))
-            (delete-if (lambda (it) (equalp it :history)) step :key #'car))
+            `((:mut-rb   . ,(step-mut-rb step))
+              (:genotype . ,(sxhash (aget :history step)))
+              (:fitness  . ,(aget :fitness step))
+              (:size     . ,(aget :size step))))
           (reverse (copy-tree walk))))
 
 (defun by-step (walks)
@@ -85,17 +81,18 @@
   (flet ((mean-and-stdev (lst) (cons (mean lst) (variance lst))))
     (mapcar
      (lambda (steps)
-       `((:fitness   . ,(mean-and-stdev (mapcar (getter :fitness)   steps)))
-         (:size      . ,(mean-and-stdev (mapcar (getter :size)      steps)))
-         (:mut-rb . ,(mean-and-stdev
-                      (mapcar #'first (mapcar (getter :neighbors) steps))))))
+       `((:neutral   . ,(/ (count 10 (mapcar (getter :fitness) steps)) 1000))
+         (:fitness   . ,(mean-and-stdev (mapcar (getter :fitness) steps)))
+         (:size      . ,(mean-and-stdev (mapcar (getter :size)    steps)))
+         (:mut-rb    . ,(mean-and-stdev (mapcar (getter :mut-rb)  steps)))))
      (transpose walks))))
 
 (defun to-file (steps file)
   "Dump steps to file as tab separated text."
-  (with-open-file (out file :direction :output)
+  (with-open-file (out file :direction :output :if-exists :supersede)
     (loop :for step :in *stats* :do
-       (format out "~&~f ~f ~f ~f ~f ~f"
+       (format out "~&~f ~f ~f ~f ~f ~f ~f"
+               (aget :neutral step)
                (car (aget :fitness step))
                (cdr (aget :fitness step))
                (car (aget :size step))
@@ -103,17 +100,20 @@
                (car (aget :mut-rb step))
                (cdr (aget :mut-rb step))))))
 
-(defvar *walks* nil)
+(defvar *walks* nil
+  "The raw walk data read directly from what is stored to disk.")
 
-#+analysis-random-walk-results
+(defvar *stats* nil
+  "Statistics describing the walk data organized by step.")
+
+#+nil
 (progn
-  (defvar *walks*
-    (loop :for i :from 0 :upto 999 :collect
-       (walk-stats (restore (format nil "results/rand-walks/walk_~a.store" i))))
-    "The raw walk data read directly from what is stored to disk.")
+  (setf *walks*
+        (loop :for i :from 0 :upto 999 :collect
+           (walk-stats
+            (restore
+             (format nil "results/rand-walks/rand-walk-~a.store" i)))))
 
-  (defvar *stats*
-    (by-step *walks*)
-    "Statistics describing the walk data organized by step.")
+  (setf *stats* (by-step *walks*))
 
   (to-file *stats* "results/rand-walks/stats.txt"))
