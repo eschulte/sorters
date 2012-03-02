@@ -16,25 +16,40 @@
 
 
 ;;; experimentation
+(defmacro repeatedly (n &body body)
+  `(loop :for _ :upto ,n :collect ,@body))
+
+(defun ant-stats (ant)
+  "Return statistics about point ANT in the genotype space."
+  (let ((fitness (fitness ant)) neighbors)
+    (dotimes (_ 10)
+      (let ((neighbor (copy ant)))
+        (mutate neighbor)
+        (push `((:fitness . ,(fitness neighbor))
+                (:history . ,(history neighbor))) neighbors)))
+    `((:size      . ,(length (genome ant)))
+      (:fitness   . ,fitness)
+      (:history   . ,(history ant))
+      (:neighbors . ,neighbors))))
+
 (defun do-random-walk (dir &key (walks 1000) (steps 100))
   "Run a series of random walks saving results to DIR."
   (dotimes (n walks)
-    (store
-     (let ((ant (asm-from-file "insertion.s")) walk)
-       (dotimes (_ steps)
-         (let ((fitness (fitness ant)) neighbors)
-           (dotimes (_ 10)
-             (let ((neighbor (copy ant)))
-               (mutate neighbor)
-               (push `((:fitness . ,(fitness neighbor))
-                       (:history . ,(history neighbor))) neighbors)))
-           (push `((:size      . ,(length (genome ant)))
-                   (:fitness   . ,fitness)
-                   (:history   . ,(history ant))
-                   (:neighbors . ,neighbors)) walk)
-           (mutate ant)))
-       walk)
+    (store (let ((ant (copy original)))
+             (repeatedly steps (prog1 (ant-stats ant) (mutate ant))))
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
+
+(defun do-neutral-walk (dir &key (popsize 1000) (steps 100))
+  "Run a series of neutral walk saving results to DIR."
+  (let ((pop (repeatedly popsize (let ((ant (copy original)))
+                                   (mutate ant) ant))))
+    (dotimes (n steps)
+      (store (mapcar #'ant-stats pop)
+             (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
+      (setf pop (mapcar (lambda (ant)
+                          (mutate ant)
+                          (if (= 10 (fitness ant)) ant (random-elt pop)))
+                        pop)))))
 
 
 ;; analysis
@@ -82,13 +97,15 @@
                (car (aget :mut-rb step))
                (cdr (aget :mut-rb step))))))
 
-(defvar *walks*
-  (loop :for i :from 0 :upto 999 :collect
-     (walk-stats (restore (format nil "results/rand-walks/walk_~a.store" i))))
-  "The raw walk data read directly from what is stored to disk.")
+#+run-analysis
+(progn
+  (defvar *walks*
+    (loop :for i :from 0 :upto 999 :collect
+       (walk-stats (restore (format nil "results/rand-walks/walk_~a.store" i))))
+    "The raw walk data read directly from what is stored to disk.")
 
-(defvar *stats*
-  (by-step *walks*)
-  "Statistics describing the walk data organized by step.")
+  (defvar *stats*
+    (by-step *walks*)
+    "Statistics describing the walk data organized by step.")
 
-(to-file *stats* "results/rand-walks/stats.txt")
+  (to-file *stats* "results/rand-walks/stats.txt"))
