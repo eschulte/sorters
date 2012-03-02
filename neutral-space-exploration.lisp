@@ -35,6 +35,9 @@
       (:history   . ,(history ant))
       (:neighbors . ,neighbors))))
 
+(defvar *pop* nil
+  "Population variable, made global to allow peeking in on runs.")
+
 (defun do-random-walk (dir &key (walks 1000) (steps 100))
   "Run a series of random walks saving results to DIR."
   (dotimes (n walks)
@@ -44,15 +47,16 @@
 
 (defun do-neutral-walk (dir &key (popsize 100) (steps 1000))
   "Run a series of neutral walk saving results to DIR."
-  (let ((pop (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
-                                   (mutate ant) ant))))
-    (dotimes (n steps)
-      (store (mapcar #'ant-stats pop)
-             (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
-      (setf pop (mapcar (lambda (ant)
-                          (mutate ant)
-                          (if (= 10 (fitness ant)) ant (copy (random-elt pop))))
-                        pop)))))
+  (setf *pop* (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
+                                    (mutate ant) ant)))
+  (dotimes (n steps)
+    (store (mapcar #'ant-stats *pop*)
+           (merge-pathnames (format nil "neut-*pop*-~S.store" n) dir))
+    (setf *pop*
+          (mapcar (lambda (ant)
+                    (mutate ant)
+                    (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
+                  *pop*))))
 
 #+run-neutral-walk
 (do-neutral-walk "results/neut-walk/")
