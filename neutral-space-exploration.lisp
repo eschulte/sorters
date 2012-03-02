@@ -19,7 +19,7 @@
 
 (setf *walks* nil)
 
-(progn
+(progn ;; actual execution of the walk
   (dotimes (n 1000)
     (push (let ((ant (asm-from-file "insertion.s")) walk)
             (dotimes (_ 100)
@@ -37,3 +37,60 @@
             walk) *walks*)
     (store (car *walks*) (format nil "walk_~S.store" n)))
   (store *walks* #P"walks.store"))
+
+
+;; analysis
+(defun aget (key lst) (cdr (assoc key lst)))
+(defun getter (key) (lambda (it) (aget key it)))
+(defun transpose (matrix) (apply #'map 'list #'list matrix))
+
+(defun step-neighbor-stats (step)
+  "Given a step, return (mut-rb ave-neighbor-fitness)."
+  (let ((neutral 0) (average 0))
+    (mapc (lambda (fitness)
+            (when (= 10 fitness) (incf neutral))
+            (incf average fitness))
+          (mapcar (lambda (n) (cdr (assoc :fitness n))) step))
+    (list neutral (/ average 10))))
+
+(defun walk-stats (walk)
+  "Return per-step alists of size, fitness, `step-neighbor-stats'. "
+  (mapcar (lambda (step)
+            (setf (cdr (assoc :neighbors step))
+                  (step-neighbor-stats (cdr (assoc :neighbors step))))
+            (delete-if (lambda (it) (equalp it :history)) step :key #'car))
+          (reverse (copy-tree walk))))
+
+(defun by-step (walks)
+  "Given a list of walks, return stats organized by step."
+  (flet ((mean-and-stdev (lst) (cons (mean lst) (variance lst))))
+    (mapcar
+     (lambda (steps)
+       `((:fitness   . ,(mean-and-stdev (mapcar (getter :fitness)   steps)))
+         (:size      . ,(mean-and-stdev (mapcar (getter :size)      steps)))
+         (:mut-rb . ,(mean-and-stdev
+                      (mapcar #'first (mapcar (getter :neighbors) steps))))))
+     (transpose walks))))
+
+(defun to-file (steps file)
+  "Dump steps to file as tab separated text."
+  (with-open-file (out file :direction :output)
+    (loop :for step :in *stats* :do
+       (format out "~&~a ~a ~a ~a ~a ~a"
+               (car (aget :fitness step))
+               (cdr (aget :fitness step))
+               (car (aget :size step))
+               (cdr (aget :size step))
+               (car (aget :mut-rb step))
+               (cdr (aget :mut-rb step))))))
+
+(defvar *walks*
+  (loop :for i :from 0 :upto 999 :collect
+     (walk-stats (restore (format nil "../walks/walk_~a.store" i))))
+  "The raw walk data read directly from what is stored to disk.")
+
+(defvar *stats*
+  (by-step *walks*)
+  "Statistics describing the walk data organized by step.")
+
+(to-file *stats* "/tmp/walks.txt")
