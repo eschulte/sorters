@@ -6,7 +6,7 @@
 #
 prog=$1
 if [ -z $3 ];then
-    limit="/tmp/limit";
+    limit="./limit";
 else
     limit="$3";
 fi
