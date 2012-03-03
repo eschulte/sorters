@@ -61,6 +61,9 @@
                     (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
                   *pop*))))
 
+#+run-neutral-walk
+(do-neutral-walk "results/neut-walk/")
+
 (defun do-biased-walk (dir &key
                              (popsize 100) (steps 1000)
                              (test #'<) (key #'size) (tournysize 2))
@@ -69,18 +72,14 @@
                                     (mutate ant) ant)))
   (dotimes (n steps)
     (store (mapcar #'ant-stats *pop*)
-           (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
+           (merge-pathnames (format nil "biased-pop-~S.store" n) dir))
     (setf *pop*
           (repeatedly popsize
-                      (first (sort (repeatedly tournysize (random-elt *pop*))
-                                   :test test :key key)))
-          (mapcar (lambda (ant)
-                    (mutate ant)
-                    (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
-                  *pop*))))
+            (first (sort (repeatedly tournysize (random-elt *pop*))
+                         test :key key))))))
 
-#+run-neutral-walk
-(do-neutral-walk "results/neut-walk/")
+#+run-biased-walk
+(do-biased-walk "results/biased-short/")
 
 
 ;; analysis
