@@ -19,6 +19,14 @@
 
 
 ;;; experimentation
+(require :eager-future2)
+(use-package :eager-future2)
+
+(defun pmapcar (f list)
+  "Parallel map (from http://marijnhaverbeke.nl/pcall/)."
+  (let ((result (mapcar (lambda (n) (pexec (funcall f n))) list)))
+    (map-into result #'join result)))
+
 (defmacro repeatedly (n &body body)
   `(loop :for _ :upto ,n :collect ,@body))
 
@@ -50,16 +58,16 @@
 
 (defun do-neutral-walk (dir &key (popsize 100) (steps 1000))
   "Expand a population in the neutral space saving results to DIR."
-  (setf *pop* (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
-                                    (mutate ant) ant)))
+  (setf *pop* (repeatedly popsize
+                (let ((ant (asm-from-file "insertion.s"))) (mutate ant) ant)))
   (dotimes (n steps)
-    (store (mapcar #'ant-stats *pop*)
+    (store (pmapcar #'ant-stats *pop*)
            (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
     (setf *pop*
-          (mapcar (lambda (ant)
-                    (mutate ant)
-                    (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
-                  *pop*))))
+          (pmapcar (lambda (ant)
+                     (mutate ant)
+                     (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
+                   *pop*))))
 
 #+run-neutral-walk
 (do-neutral-walk "results/neut-walk/")
@@ -68,10 +76,10 @@
                              (popsize 100) (steps 1000)
                              (test #'<) (key #'size) (tournysize 2))
   "Evolve a population in the neutral space biased by TEST and KEY."
-  (setf *pop* (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
-                                    (mutate ant) ant)))
+  (setf *pop* (repeatedly popsize
+                (let ((ant (asm-from-file "insertion.s"))) (mutate ant) ant)))
   (dotimes (n steps)
-    (store (mapcar #'ant-stats *pop*)
+    (store (pmapcar #'ant-stats *pop*)
            (merge-pathnames (format nil "biased-pop-~S.store" n) dir))
     (setf *pop*
           (repeatedly popsize
