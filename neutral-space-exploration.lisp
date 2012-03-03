@@ -22,6 +22,9 @@
 (defmacro repeatedly (n &body body)
   `(loop :for _ :upto ,n :collect ,@body))
 
+(defmethod size ((ant software))
+  (length (genome ant)))
+
 (defun ant-stats (ant)
   "Return statistics about point ANT in the genotype space."
   (let ((fitness (fitness ant)) neighbors)
@@ -30,7 +33,7 @@
         (mutate neighbor)
         (push `((:fitness . ,(fitness neighbor))
                 (:history . ,(history neighbor))) neighbors)))
-    `((:size      . ,(length (genome ant)))
+    `((:size      . ,(size ant))
       (:fitness   . ,fitness)
       (:history   . ,(history ant))
       (:neighbors . ,neighbors))))
@@ -46,13 +49,31 @@
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
 (defun do-neutral-walk (dir &key (popsize 100) (steps 1000))
-  "Run a series of neutral walk saving results to DIR."
+  "Expand a population in the neutral space saving results to DIR."
   (setf *pop* (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
                                     (mutate ant) ant)))
   (dotimes (n steps)
     (store (mapcar #'ant-stats *pop*)
            (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
     (setf *pop*
+          (mapcar (lambda (ant)
+                    (mutate ant)
+                    (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
+                  *pop*))))
+
+(defun do-biased-walk (dir &key
+                             (popsize 100) (steps 1000)
+                             (test #'<) (key #'size) (tournysize 2))
+  "Evolve a population in the neutral space biased by TEST and KEY."
+  (setf *pop* (repeatedly popsize (let ((ant (asm-from-file "insertion.s")))
+                                    (mutate ant) ant)))
+  (dotimes (n steps)
+    (store (mapcar #'ant-stats *pop*)
+           (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
+    (setf *pop*
+          (repeatedly popsize
+                      (first (sort (repeatedly tournysize (random-elt *pop*))
+                                   :test test :key key)))
           (mapcar (lambda (ant)
                     (mutate ant)
                     (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
