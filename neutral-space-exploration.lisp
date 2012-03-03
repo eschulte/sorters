@@ -51,7 +51,7 @@
                                     (mutate ant) ant)))
   (dotimes (n steps)
     (store (mapcar #'ant-stats *pop*)
-           (merge-pathnames (format nil "neut-*pop*-~S.store" n) dir))
+           (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
     (setf *pop*
           (mapcar (lambda (ant)
                     (mutate ant)
