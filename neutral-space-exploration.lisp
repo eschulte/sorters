@@ -25,10 +25,12 @@
 (defun pmapcar (f list)
   "Parallel map (from http://marijnhaverbeke.nl/pcall/)."
   (let ((result (mapcar (lambda (n) (pexec (funcall f n))) list)))
-    (map-into result #'join result)))
+    (map-into result #'yield result)))
 
 (defmacro repeatedly (n &body body)
-  `(loop :for _ :upto ,n :collect ,@body))
+  (let ((result-sym (gensym)))
+    `(let ((,result-sym (loop :for _ :upto ,n :collect (pexec ,@body))))
+       (map-into ,result-sym #'yield ,result-sym))))
 
 (defmethod size ((ant software))
   (length (genome ant)))
@@ -56,18 +58,20 @@
              (repeatedly steps (prog1 (ant-stats ant) (mutate ant))))
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
+(defun do-neutral-step (pop &key (size nil) (select #'random-elt))
+  (repeatedly (or size (length pop))
+    (let ((ant (copy (funcall select pop))))
+      (mutate ant)
+      (if (= 10 (fitness ant)) ant (copy (random-elt pop))))))
+
 (defun do-neutral-walk (dir &key (popsize 100) (steps 1000))
   "Expand a population in the neutral space saving results to DIR."
-  (setf *pop* (repeatedly popsize
-                (let ((ant (asm-from-file "insertion.s"))) (mutate ant) ant)))
+  (setf *pop* (do-neutral-step (list (asm-from-file "insertion.s"))
+                :size popsize))
   (dotimes (n steps)
     (store (pmapcar #'ant-stats *pop*)
            (merge-pathnames (format nil "neut-pop-~S.store" n) dir))
-    (setf *pop*
-          (pmapcar (lambda (ant)
-                     (mutate ant)
-                     (if (= 10 (fitness ant)) ant (copy (random-elt *pop*))))
-                   *pop*))))
+    (setf *pop* (do-neutral-step *pop*))))
 
 #+run-neutral-walk
 (do-neutral-walk "results/neut-walk/")
@@ -76,15 +80,13 @@
                              (popsize 100) (steps 1000)
                              (test #'<) (key #'size) (tournysize 2))
   "Evolve a population in the neutral space biased by TEST and KEY."
-  (setf *pop* (repeatedly popsize
-                (let ((ant (asm-from-file "insertion.s"))) (mutate ant) ant)))
-  (dotimes (n steps)
-    (store (pmapcar #'ant-stats *pop*)
-           (merge-pathnames (format nil "biased-pop-~S.store" n) dir))
-    (setf *pop*
-          (repeatedly popsize
-            (first (sort (repeatedly tournysize (random-elt *pop*))
-                         test :key key))))))
+  (setf *pop* (do-neutral-step (list (asm-from-file "insertion.s")) popsize))
+  (flet ((pick (pop) (first (sort (repeatedly tournysize (random-elt *pop*))
+                                  test :key key))))
+    (dotimes (n steps)
+      (store (pmapcar #'ant-stats *pop*)
+             (merge-pathnames (format nil "biased-pop-~S.store" n) dir))
+      (setf *pop* (do-neutral-step *pop* :select #'pick)))))
 
 #+run-biased-walk
 (do-biased-walk "results/biased-short/")
@@ -108,16 +110,19 @@
               (:size     . ,(aget :size step))))
           (reverse (copy-tree walk))))
 
-(defun by-step (walks)
-  "Given a list of walks, return stats organized by step."
+(defun step-stats (steps)
   (flet ((mean-and-stdev (lst) (cons (mean lst) (variance lst))))
     (mapcar
      (lambda (steps)
-       `((:neutral   . ,(/ (count 10 (mapcar (getter :fitness) steps)) 1000))
+       `((:neutral   . ,(/ (count 10 (mapcar (getter :fitness) steps)) 101))
          (:fitness   . ,(mean-and-stdev (mapcar (getter :fitness) steps)))
          (:size      . ,(mean-and-stdev (mapcar (getter :size)    steps)))
          (:mut-rb    . ,(mean-and-stdev (mapcar (getter :mut-rb)  steps)))))
-     (transpose walks))))
+     steps)))
+
+(defun by-step (walks)
+  "Given a list of walks, return stats organized by step."
+  (step-stats (transpose walks)))
 
 (defun to-file (steps file)
   "Dump steps to file as tab separated text."
@@ -138,7 +143,7 @@
 (defvar *stats* nil
   "Statistics describing the walk data organized by step.")
 
-#+nil
+#+random-walk-results
 (progn
   (setf *walks*
         (loop :for i :from 0 :upto 999 :collect
@@ -149,3 +154,15 @@
   (setf *stats* (by-step *walks*))
 
   (to-file *stats* "results/rand-walks/stats.txt"))
+
+#+neut-walk-results
+(progn
+  (setf *walks*
+        (loop :for i :from 0 :upto 999 :collect
+           (walk-stats
+            (restore
+             (format nil "results/neut-walk/neut-pop-~a.store" i)))))
+
+  (setf *stats* (step-stats *walks*))
+
+  (to-file *stats* "results/neut-walk/stats.txt"))
