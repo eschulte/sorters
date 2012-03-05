@@ -58,6 +58,9 @@
              (repeatedly steps (prog1 (ant-stats ant) (mutate ant))))
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
+#+run-random-walk
+(do-random-walk "results/rand-walks")
+
 (defun do-neutral-step (pop &key (size nil) (select #'random-elt))
   (repeatedly (or size (length pop))
     (let ((ant (copy (funcall select pop))))
