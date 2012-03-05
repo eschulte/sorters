@@ -41,14 +41,14 @@
   "Run a series of random walks saving results to DIR."
   (dotimes (n walks)
     (store (let ((ant (asm-from-file "insertion.s")))
-             (repeatedly steps (prog1 (ant-stats ant) (mutate ant))))
+             (prepeatedly steps (prog1 (ant-stats ant) (mutate ant))))
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
 #+run-random-walk
 (do-random-walk "results/rand-walks")
 
 (defun do-neutral-step (pop &key (size nil) (select #'random-elt))
-  (repeatedly (or size (length pop))
+  (prepeatedly (or size (length pop))
     (let ((ant (copy (funcall select pop))))
       (mutate ant)
       (if (= 10 (fitness ant)) ant (copy (random-elt pop))))))
@@ -71,7 +71,7 @@
   "Evolve a population in the neutral space biased by TEST and KEY."
   (setf *pop* (do-neutral-step (list (asm-from-file seed))
                 :size popsize))
-  (flet ((pick (pop) (first (sort (repeatedly tournysize (random-elt *pop*))
+  (flet ((pick (pop) (first (sort (prepeatedly tournysize (random-elt *pop*))
                                   test :key key))))
     (dotimes (n steps)
       (store (pmapcar #'ant-stats *pop*)
