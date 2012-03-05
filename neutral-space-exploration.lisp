@@ -66,10 +66,10 @@
 (do-neutral-walk "results/neut-walk/")
 
 (defun do-biased-walk (dir &key
-                             (popsize 100) (steps 1000)
+                             (seed "insertion.s") (popsize 100) (steps 1000)
                              (test #'<) (key #'size) (tournysize 2))
   "Evolve a population in the neutral space biased by TEST and KEY."
-  (setf *pop* (do-neutral-step (list (asm-from-file "insertion.s"))
+  (setf *pop* (do-neutral-step (list (asm-from-file seed))
                 :size popsize))
   (flet ((pick (pop) (first (sort (repeatedly tournysize (random-elt *pop*))
                                   test :key key))))
@@ -80,6 +80,25 @@
 
 #+run-biased-walk
 (do-biased-walk "results/biased-short/")
+
+(defun distance-from-original (ant)
+  (edit-distance ant original))
+
+#+run-biased-walk
+(do-biased-walk "results/biased-far/" :test #'> :key #'distance-from-original)
+
+;; To setup this experiment run the following at the shell:
+;; $ cp insertion.s both.s
+;; $ comm -23 <(cat bubble.s|sort -u) <(cat insertion.s|sort -u) >> both.s
+(when (probe-file "bubble.s")
+  (defvar *bub* (asm-from-file "bubble.s")))
+
+(defun distance-to-bubble (ant)
+  (edit-distance ant *bub*))
+
+#+run-biased-walk-to-bubble-sort
+(do-biased-walk "results/biased-to-bub/"
+  :seed "both.s" :key #'distance-to-bubble)
 
 
 ;; analysis
