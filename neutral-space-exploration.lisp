@@ -85,7 +85,8 @@
                              (popsize 100) (steps 1000)
                              (test #'<) (key #'size) (tournysize 2))
   "Evolve a population in the neutral space biased by TEST and KEY."
-  (setf *pop* (do-neutral-step (list (asm-from-file "insertion.s")) popsize))
+  (setf *pop* (do-neutral-step (list (asm-from-file "insertion.s"))
+                :size popsize))
   (flet ((pick (pop) (first (sort (repeatedly tournysize (random-elt *pop*))
                                   test :key key))))
     (dotimes (n steps)
