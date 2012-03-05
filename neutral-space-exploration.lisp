@@ -21,22 +21,6 @@
 
 
 ;;; experimentation
-(require :eager-future2)
-(use-package :eager-future2)
-
-(defun pmapcar (f list)
-  "Parallel map (from http://marijnhaverbeke.nl/pcall/)."
-  (let ((result (mapcar (lambda (n) (pexec (funcall f n))) list)))
-    (map-into result #'yield result)))
-
-(defmacro repeatedly (n &body body)
-  (let ((result-sym (gensym)))
-    `(let ((,result-sym (loop :for _ :upto ,n :collect (pexec ,@body))))
-       (map-into ,result-sym #'yield ,result-sym))))
-
-(defmethod size ((ant software))
-  (length (genome ant)))
-
 (defun ant-stats (ant)
   "Return statistics about point ANT in the genotype space."
   (let ((fitness (fitness ant)) neighbors)
@@ -99,10 +83,6 @@
 
 
 ;; analysis
-(defun aget (key lst) (cdr (assoc key lst)))
-(defun getter (key) (lambda (it) (aget key it)))
-(defun transpose (matrix) (apply #'map 'list #'list matrix))
-
 (defun step-mut-rb (step)
   "Return the mutational robustness of a step from its neighbors."
   (/ (count 10 (mapcar (getter :fitness) (aget :neighbors step))) 10))
