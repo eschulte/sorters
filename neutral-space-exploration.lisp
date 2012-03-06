@@ -45,7 +45,7 @@
      (merge-pathnames (format nil "rand-walk-~S.store" n) dir))))
 
 #+run-random-walk
-(do-random-walk "results/rand-walks")
+(do-random-walk "results/rand-walks/")
 
 (defun do-neutral-step (pop &key (size nil) (select #'random-elt))
   (prepeatedly (or size (length pop))
