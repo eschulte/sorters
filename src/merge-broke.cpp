@@ -1,66 +1,57 @@
-// adapted from http://www.cplusplus.happycodings.com/Algorithms/code17.html
 #include <iostream>
+#include <cmath>
 #include <stdlib.h>
-int a[50];
+using namespace std;
 
-void merge(int,int,int);
+void merge(int* input, int p, int r)
+{
+  int mid = floor((p + r) / 2);
+  int i1 = 0;
+  int i2 = p;
+  int i3 = mid + 1;
 
-void merge_sort(int low,int high){
-  int mid;
-  if(low<high)
-    {
-      mid=(low+high)/2;
-      merge_sort(low,mid);
-      merge_sort(mid+1,high);
-      merge(low,mid,high);
-    }
+  // Temp array
+  int temp[r-p+1];
+
+  // Merge in sorted form the 2 arrays
+  while ( i2 <= mid && i3 <= r )
+    if ( input[i2] < input[i3] )
+      temp[i1++] = input[i2++];
+    else
+      temp[i1++] = input[i3++];
+
+  // Merge the remaining elements in left array
+  while ( i2 <= mid )
+    temp[i1++] = input[i2++];
+
+  // Merge the remaining elements in right array
+  while ( i3 <= r )
+    temp[i1++] = input[i3++];
+
+  // Move from temp array to master array
+  for ( int i = p; i <= r; i++ )
+    input[i] = temp[i-p];
 }
 
-void merge(int low,int mid,int high){
-  int h,i,j,b[50],k;
-  h=low;
-  i=low;
-  j=mid+1;
-
-  while((h<=mid)&&(j<=high))
+void merge_sort(int* input, int p, int r)
+{
+  if ( p < r )
     {
-      if(a[h]<=a[j])
-        {
-          b[i]=a[h];
-          h++;
-        }
-      else
-        {
-          b[i]=a[j];
-          j++;
-        }
-      i++;
+      int mid = floor((p + r) / 2);
+      merge_sort(input, p, mid);
+      merge_sort(input, mid + 1, r);
+      merge(input, p, r);
     }
-  if(h>mid)
-    {
-      for(k=j;k<=high;k++)
-        {
-          b[i]=a[k];
-          i++;
-        }
-    }
-  else
-    {
-      for(k=h;k<=mid;k++)
-        {
-          b[i]=a[k];
-          i++;
-        }
-    }
-  for(k=low;k<=high;k++) a[k]=b[k];
 }
 
 int main(int argc, char *argv[])
 {
+  int *lst;
   int i;
-  for(i=1;i<argc;i++) a[i-1] = atoi(argv[i]);
-  merge_sort(0, (argc - 1));
-  for(i=1;i<argc;i++) std::cout << a[i-1] << " ";
-  std::cout << std::endl;
+  lst = (int*)malloc(sizeof(int)*argc-1);
+  for(i=1;i<argc;i++) lst[i-1] = atoi(argv[i]);
+  merge_sort(lst, 0, (argc-1));
+  for(i=0;i<(argc-1);i++) cout << lst[i] << " ";
+  cout << endl;
   return 0;
 }
