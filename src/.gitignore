@@ -4,6 +4,8 @@ merge
 merge-broke
 quick
 *.s
+*.o
+*.cmo
 *.cmi
 *.cmx
 *.hi
