@@ -27,7 +27,7 @@ http://www.ocaml-tutorial.org/performance_and_profiling
 1) first generate the required .s and startup files
    : ocamlopt -dstartup -S bubble.ml
 2) then find out what flags ocamlopt is passing to gcc
-   : ocamlopt -verbose
+   : ocamlopt -verbose -o bub1 bubble.ml
 3) call gcc on the startup and .s file, as well as the ocaml libraries
    copied from the verbose output of ocamlopt -verbose, e.g. 
    : gcc -o bub '-L/usr/lib/ocaml' 'a.out.startup.s' '/usr/lib/ocaml/std_exit.o' 'bubble.s' '/usr/lib/ocaml/stdlib.a' '/usr/lib/ocaml/libasmrun.a' -lm  -ldl
