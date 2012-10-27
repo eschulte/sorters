@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <stdbool.h>
@@ -24,9 +25,11 @@ int main(int argc, char *argv[]){
 
   for(i=0;i<(uint64_t)sb.st_size;i++)
     if (last && mem[i] <= 122 && mem[i] >= 97)
-      { putchar(mem[i]-32); last=false;        }
+      { mem[i]-=32; last=false; }
     else
-      { putchar(mem[i]);    last=(mem[i]==32); }
+      { last=(mem[i]==32); }
+
+  write(1,mem,(uint64_t)sb.st_size);
 
   return 0;
 }
