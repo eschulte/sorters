@@ -1,7 +1,8 @@
 #define bufsize 2 << 15
-int main(){
-  int bread; char buf[bufsize]; int i; char cur, prev;
-  bread = read(0, buf, bufsize);
+int main(int argc, char *argv[]){
+  int bread, fd; char buf[bufsize]; int i; char cur, prev;
+  fd = open(argv[1]);
+  bread = read(fd, buf, bufsize);
   while(bread){
     for(i=0; i<bread; i++){
       cur = buf[i];
@@ -9,6 +10,6 @@ int main(){
       prev = cur;
     }
     write(1, buf, bread);
-    bread = read(0, buf, bufsize);
+    bread = read(fd, buf, bufsize);
   }
 }
