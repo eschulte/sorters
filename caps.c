@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <sys/stat.h>
 #include <sys/mman.h>
 #include <stdbool.h>
 #include <fcntl.h>
@@ -8,8 +9,7 @@
 int main(int argc, char *argv[]){
   char *mem;
   struct stat sb;
-  bool last = 1;
-  char this;
+  bool last = true;
   uint64_t i;
   int fd;
 
@@ -23,10 +23,10 @@ int main(int argc, char *argv[]){
   }
 
   for(i=0;i<(uint64_t)sb.st_size;i++)
-    if (last && mem[i] <= 122 && mem[i] >= 97) { mem[i]-=32; last=false; }
-    else                                       { last = (mem[i] == 32); }
-
-  write(1, mem, sb.st_size);
+    if (last && mem[i] <= 122 && mem[i] >= 97)
+      { putchar(mem[i]-32); last=false;        }
+    else
+      { putchar(mem[i]);    last=(mem[i]==32); }
 
   return 0;
 }
