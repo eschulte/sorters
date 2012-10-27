@@ -8,3 +8,6 @@ all: check
 
 %: %.hs
 	ghc -Ofast -o $@ $<
+
+clean:
+	find . -type f -executable|grep -v "\.git"|xargs -I{} rm {}
