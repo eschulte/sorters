@@ -14,19 +14,21 @@ void *do_cap(void *args);
 int main(int argc, char *argv[]){
   struct stat sb;
   pthread_t t0,t1,t2,t3;
-  int fd,chunk;
-  uint64_t args[2];
+  int fd;
+  uint64_t size,chunk,args[2];
 
   fd  = open(argv[1], O_RDONLY);
   fstat(fd, &sb);
   mem = mmap(NULL, sb.st_size, PROT_WRITE, MAP_PRIVATE, fd, 0);
 
   if (mem == MAP_FAILED) {
-    printf("error opening %s\n", argv[1]);
+    fprintf(stderr, "error opening %s\n", argv[1]);
     return 1;
   }
 
-  chunk = (sb.st_size / 4);
+  size  = (uint64_t)sb.st_size;
+  chunk = (size / 4);
+  fprintf(stderr, "size:%lu chunk:%lu\n", size, chunk);
 
   /* Launch Threads */
   args[0]=0; args[1]=(1*chunk);
