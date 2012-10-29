@@ -4,10 +4,10 @@ HC := ghc
 all: check
 
 %: %.c
-	gcc -Ofast -lpthread -o $@ $<
+	${C} -Ofast -lpthread -o $@ $<
 
 %: %.hs
-	ghc -Ofast -o $@ $<
+	${HC} -Ofast -o $@ $<
 
 clean:
 	find . -type f -executable|grep -v "\.git"|xargs -I{} rm {}

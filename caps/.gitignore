@@ -5,3 +5,5 @@
 !*.hs
 !*.lisp
 !*.scm
+!*.py
+!*.pyx
