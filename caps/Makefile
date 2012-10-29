@@ -12,5 +12,8 @@ all: check
 python:
 	python setup.py build_ext --inplace
 
+/tmp/test: lorem
+	./lorem 2500000 > $@
+
 clean:
 	find . -type f -executable|grep -v "\.git"|xargs -I{} rm {}
