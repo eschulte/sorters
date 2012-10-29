@@ -1,10 +1,10 @@
-C:= gcc
+CC:= gcc
 HC := ghc
 
 all: check
 
 %: %.c
-	${C} -Ofast -lpthread -o $@ $<
+	${CC} -Ofast -o $@ $<  -lpthread
 
 %: %.hs
 	${HC} -Ofast -o $@ $<
