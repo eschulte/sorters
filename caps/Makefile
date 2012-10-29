@@ -1,4 +1,4 @@
-CC := gcc
+C:= gcc
 HC := ghc
 
 all: check
