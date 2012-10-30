@@ -16,4 +16,4 @@ python:
 	./lorem 2500000 > $@
 
 clean:
-	find . -type f -executable|grep -v "\.git"|xargs -I{} rm {}
+	find . -type f -executable|grep -v "\.git"|grep -v "\.sh$$"|xargs -I{} rm {}
