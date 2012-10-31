@@ -12,4 +12,8 @@
 !*.M
 !*.R
 !*.js
+<<<<<<< HEAD
 !*.jl
+=======
+!*.awk
+>>>>>>> awk one liner
