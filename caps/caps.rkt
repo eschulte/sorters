@@ -1,18 +1,15 @@
 #lang typed/racket
 
-(: cap-forward (Byte -> Boolean))
+(: cap-forward (Char -> Char))
 (define (cap-forward prev)
   (let: ([stdin (current-input-port)]
-         [space : Byte 32]
-         [eof   : Byte 10]
-         [low-a : Byte 97])
-    (let: ([curr : (U Byte EOF) (read-byte stdin)])
-      (if (byte? curr)
-          (begin (display (if (and (= space prev)
-                                   (>= prev low-a))
-                              (- curr 32)
+         [space : Char #\Space]
+         [low-a : Char #\a])
+    (let: ([curr : (U Char EOF) (read-char stdin)])
+      (if (char? curr)
+          (begin (display (if (eq? space prev)
+                              (char-upcase curr)
                               curr))
                  (cap-forward curr))
-          #f))))
-
-(cap-forward (ann 32 Byte))
+          #\newline))))
+(display (cap-forward #\Space))
