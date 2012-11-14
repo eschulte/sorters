@@ -1,0 +1,23 @@
+Evolve Simple Sorting Algorithms Implemented in a Variety of Langauges
+
+This repository contains four sorting algorithms implemented in four
+programming languages each.  Every implementation compiles to an
+command line executable which implements the same simple
+specification.  All implementations may be tested using the same test
+script in bin/test.sh.
+
+Contents
+
+  sorters | implementations of 4 sorting algorithsm in 4 langauges
+      src | code for experiments over the sorters
+      bin | shell script for collectin and analyzing results
+   README | this file
+    NOTES | additional informal notes
+
+Requirements
+
+  Many of the experiments laid out in src may require either the
+  genprog [1] or software evolution [2] tool suites.
+
+  [1] http://dijkstra.cs.virginia.edu/genprog/
+  [2] https://github.com/eschulte/software-evolution
