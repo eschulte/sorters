@@ -13,6 +13,7 @@ quick
 *.map
 *.addrs
 *.path
+*.store
 bubble-c
 bubble-cpp
 bubble-hs
