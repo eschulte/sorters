@@ -46,4 +46,4 @@
     store))
 
 (let ((files (cdr sb-ext:*posix-argv*)))
-  (mapcar #'neutrality files))
+  (pmapcar #'neutrality files))
