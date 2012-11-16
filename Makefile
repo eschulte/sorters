@@ -3,28 +3,18 @@ CXX=g++
 HC=ghc
 OC=ocamlopt
 
-C_SRC = \
-	sorters/bubble-c.c \
-	sorters/insertion-c.c \
-	sorters/merge-c.c \
-	sorters/quick-c.c
-CPP_SRC = \
-	sorters/bubble-cpp.cpp \
-	sorters/insertion-cpp.cpp \
-	sorters/merge-cpp.cpp \
-	sorters/quick-cpp.cpp
-HS_SRC = \
-	sorters/bubble-hs.hs \
-	sorters/insertion-hs.hs \
-	sorters/merge-hs.hs \
-	sorters/quick-hs.hs
-ML_SRC = \
-	sorters/bubble-ml.ml \
-	sorters/insertion-ml.ml \
-	sorters/merge-ml.ml \
-	sorters/quick-ml.ml
+ALGORITHMS= 		\
+	bubble		\
+	insertion	\
+	merge		\
+	quick
 
-ASM += $(C_SRC:.c=.s)
+C_SRC   = $(addprefix sorters/, $(ALGORITHMS:=-c.c))
+CPP_SRC = $(addprefix sorters/, $(ALGORITHMS:=-cpp.cpp))
+HS_SRC  = $(addprefix sorters/, $(ALGORITHMS:=-hs.hs))
+ML_SRC  = $(addprefix sorters/, $(ALGORITHMS:=-ml.ml))
+
+ASM  = $(C_SRC:.c=.s)
 ASM += $(CPP_SRC:.cpp=.s)
 ASM += $(HS_SRC:.hs=.s)
 # ASM += $(ML_SRC:.ml=.s)
@@ -45,7 +35,7 @@ all: $(ASM) bin/limit
 	$(OC) -dstartup -S $<
 
 bin/limit: bin/limit.c
-	$(CC) -o $<
+	$(CC) -o $@ $<
 
 clean:
-	$(ASM) bin/limit
+	rm -f $(ASM) bin/limit
