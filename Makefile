@@ -1,17 +1,17 @@
 CC=gcc
-CXX=g++
+CP=g++
 HC=ghc
 OC=ocamlopt
 
-ALGORITHMS= 		\
-	bubble		\
-	insertion	\
-	merge		\
+ALGORITHMS= \
+	bubble \
+	insertion \
+	merge \
 	quick
 
-C_SRC   = $(addprefix sorters/, $(ALGORITHMS:=-c.c))
-CPP_SRC = $(addprefix sorters/, $(ALGORITHMS:=-cpp.cpp))
-HS_SRC  = $(addprefix sorters/, $(ALGORITHMS:=-hs.hs))
+C_SRC   = $(addprefix sorters/, $(ALGORITHMS:=_c.c))
+CPP_SRC = $(addprefix sorters/, $(ALGORITHMS:=_cpp.cpp))
+HS_SRC  = $(addprefix sorters/, $(ALGORITHMS:=_hs.hs))
 ML_SRC  = $(addprefix sorters/, $(ALGORITHMS:=_ml.ml))
 
 ASM  = $(C_SRC:.c=.s)
@@ -19,23 +19,47 @@ ASM += $(CPP_SRC:.cpp=.s)
 ASM += $(HS_SRC:.hs=.s)
 ASM += $(ML_SRC:.ml=.s)
 
+GCC_OPTS   = O0 O1 O2 O3 Os Ofast
+CLANG_OPTS = O0 O1 O2 Os Oz O3 O4
+GHC_OPTS   = O0 O1 O2 O3 O4
+ML_OPTS    = compact nodynlink
+
+C_GCC       = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_c_gcc$(opt).s))
+C_CLANG     = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_c_clang$(opt).s))
+CPP_GCC     = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_cpp_g++$(opt).s))
+CPP_CLANG   = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_cpp_clang++$(opt).s))
+HS_GHC      = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_hs_ghc$(opt).s))
+ML_OCAMLOPT = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_ml_ocamlopt$(opt).s))
+
+OPTS  = $(C_GCC)
+OPTS += $(C_CLANG)
+OPTS += $(CPP_GCC)
+OPTS += $(CPP_CLANG)
+OPTS += $(HS_GHC)
+OPTS += $(ML_OCAMLOPT)
+
 all: $(ASM) bin/limit
-.PHONY: clean
+opts:
+	echo $(OPTS)
+.PHONY: clean opts
 
 %.s: %.c
-	$(CC) -S $< -o $@
+	$(CC) -o $@ -S $<
 
 %.s: %.cpp
-	$(CXX) -S $< -o $@
+	$(CP) -o $@ -S $<
 
 %.s: %.hs
-	$(HC) -S $< -o $@
+	$(HC) -o $@ -S $<
 
 %.s: %.ml
 	$(OC) -dstartup -S $<
+
+%.s:
+	./bin/omni-compiler $@
 
 bin/limit: bin/limit.c
 	$(CC) -o $@ $<
 
 clean:
-	rm -f $(ASM) bin/limit sorters/*.cm* sorters/*.o
+	rm -f $(ASM) bin/limit sorters/*.cm* sorters/*.o sorters/*.hi

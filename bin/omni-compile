@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# Usage: omni-compile algorithm_lang_comp_opt.s
+# compile the target ALGORITHM in LANG using COMP with flags OPT
+#
+TARGET=$1
+echo $TARGET|grep ".*_.*_.*_.*.s">/dev/null||(echo "bad input">&2;exit 1)
+part(){ basename $TARGET .s |awk "BEGIN{FS=\"_\"} {print \$$1}"; }
+
+DIR=$(dirname $TARGET)
+ALG=$(part 1)
+LNG=$(part 2)
+CMP=$(part 3)
+OPT=$(part 4)
+
+CMD="$CMP -o $TARGET -S $DIR/$ALG_$LNG.$LNG -$OPT"
+echo $CMD
+$CMD
