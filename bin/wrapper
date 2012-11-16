@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+# wrap up the execution of anther script, hopefully protecting from
+# serious errors or timeouts
+#
+time=$1; shift
+ulimit -t $time
+timeout $time $@
+exit $?
