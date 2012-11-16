@@ -49,8 +49,5 @@ opts: $(OPTS)
 _%.s:
 	../bin/omni-compile $@
 
-bin/limit: bin/limit.c
-	$(CC) -o $@ $<
-
 clean:
 	rm -f $(ASM) $(OPTS) bin/limit *.cm* *.o *.hi

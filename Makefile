@@ -1,6 +1,11 @@
-all: asms opts
+CC=gcc
+
+all: asms opts bin/limit
 
 .PHONY: clean asms opts
+
+bin/limit: bin/limit.c
+	$(CC) -o $@ $<
 
 asms:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);
