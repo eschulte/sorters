@@ -19,24 +19,20 @@ CLANG_OPTS = O0 O1 O2 Os Oz O3 O4
 GHC_OPTS   = O0 O1 O2 O3 O4
 ML_OPTS    = compact nodynlink
 
-C_GCC       = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_c_gcc$(opt).s))
-C_CLANG     = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_c_clang$(opt).s))
-CPP_GCC     = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_cpp_g++$(opt).s))
-CPP_CLANG   = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_cpp_clang++$(opt).s))
-HS_GHC      = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_hs_ghc$(opt).s))
-ML_OCAMLOPT = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_ml_ocamlopt$(opt).s))
-
-OPTS  = $(C_GCC)
-OPTS += $(C_CLANG)
-OPTS += $(CPP_GCC)
-OPTS += $(CPP_CLANG)
-OPTS += $(HS_GHC)
-OPTS += $(ML_OCAMLOPT)
+C_GCC       = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_c_gcc_$(opt).s))
+C_CLANG     = $(foreach opt,$(CLANG_OPTS), $(ALGORITHMS:=_c_clang_$(opt).s))
+CPP_GCC     = $(foreach opt,$(GCC_OPTS), $(ALGORITHMS:=_cpp_g++_$(opt).s))
+CPP_CLANG   = $(foreach opt,$(CLANG_OPTS), $(ALGORITHMS:=_cpp_clang++_$(opt).s))
+HS_GHC      = $(foreach opt,$(GHC_OPTS), $(ALGORITHMS:=_hs_ghc_$(opt).s))
+ML_OCAMLOPT = $(foreach opt,$(ML_OPTS), $(ALGORITHMS:=_ml_ocamlopt_$(opt).s))
+TMP  = $(C_GCC) $(C_CLANG) $(CPP_GCC) $(CPP_CLANG) $(HS_GHC) $(ML_OCAMLOPT)
+OPTS = $(addprefix _, $(TMP))
 
 all: $(ASM) bin/limit
-opts:
-	echo $(OPTS)
+
 .PHONY: clean opts
+
+opts: $(OPTS)
 
 %.s: %.c
 	$(CC) -o $@ -S $<
@@ -50,11 +46,11 @@ opts:
 %.s: %.ml
 	$(OC) -dstartup -S $<
 
-%.s:
-	./bin/omni-compiler $@
+_%.s:
+	../bin/omni-compile $@
 
 bin/limit: bin/limit.c
 	$(CC) -o $@ $<
 
 clean:
-	rm -f $(ASM) bin/limit sorters/*.cm* sorters/*.o sorters/*.hi
+	rm -f $(ASM) $(OPTS) bin/limit *.cm* *.o *.hi
