@@ -30,9 +30,12 @@ OPTS = $(addprefix _, $(TMP))
 
 all: $(ASM) bin/limit
 
-.PHONY: clean opts
+.PHONY: clean real-clean opts neut
 
 opts: $(OPTS)
+
+neut: $(OPTS)
+	../bin/neutrality $(OPTS)
 
 %.s: %.c
 	$(CC) -o $@ -S $<
@@ -51,3 +54,6 @@ _%.s:
 
 clean:
 	rm -f $(ASM) $(OPTS) bin/limit *.cm* *.o *.hi
+
+real-clean: clean
+	rm -f $(OPTS:.s=.store)

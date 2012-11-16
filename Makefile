@@ -2,7 +2,7 @@ CC=gcc
 
 all: asms opts bin/limit
 
-.PHONY: clean asms opts
+.PHONY: clean real-clean asms opts
 
 bin/limit: bin/limit.c
 	$(CC) -o $@ $<
@@ -14,4 +14,7 @@ opts:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);
 
 clean:
+	$(MAKE) -C sorters/ $(MAKECMDGOALS);
+
+real-clean:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);
