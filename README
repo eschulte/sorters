@@ -9,8 +9,8 @@ script in bin/test.sh.
 Contents
 
   sorters | implementations of 4 sorting algorithsm in 4 langauges
-      src | code for experiments over the sorters
-      bin | shell script for collectin and analyzing results
+      bin | lisp programs and shell scripts for running experiments
+          | and collecting and analyzing results
    README | this file
     NOTES | additional informal notes
 
