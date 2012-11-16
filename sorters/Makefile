@@ -53,7 +53,7 @@ _%.s:
 	../bin/omni-compile $@
 
 clean:
-	rm -f $(ASM) $(OPTS) bin/limit *.cm* *.o *.hi
+	rm -f $(ASM) $(OPTS) *.cm* *.o *.hi
 
 real-clean: clean
 	rm -f $(OPTS:.s=.store)
