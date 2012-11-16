@@ -1,7 +1,7 @@
 #!/usr/bin/sbcl --script
 ;;; -*- common-lisp -*-
 ;;; neutral.lisp --- test sorters for neutrality across representations
-(load "~/.sbclrc"
+(load (merge-pathnames ".sbclrc" (user-homedir-pathname))
       :if-does-not-exist (error "Need quicklisp to load dependencies"))
 (require 'software-evolution)
 (in-package :software-evolution)
