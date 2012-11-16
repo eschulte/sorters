@@ -18,3 +18,6 @@ clean:
 
 real-clean:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);
+
+real-real-clean
+	$(MAKE) -C sorters/ $(MAKECMDGOALS);

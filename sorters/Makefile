@@ -57,3 +57,6 @@ clean:
 
 real-clean: clean
 	rm -f $(OPTS:.s=.store)
+
+real-real-clean: real-clean
+	rm -f seed

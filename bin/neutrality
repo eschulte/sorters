@@ -35,7 +35,7 @@
         (count t (loop :for num :below *num-tests* :collect (run-test bin num)))
         0)))
 
-(defun neutrality (path &key (runs 20))
+(defun neutrality (path &key (runs 1000))
   "Test the neutrality of the assembly program at PATH."
   (let* ((pathname (pathname path))
          (orig (from-file (make-instance 'asm) pathname))
