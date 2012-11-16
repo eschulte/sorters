@@ -1,8 +1,7 @@
 #!/usr/bin/sbcl --script
 ;;; -*- common-lisp -*-
 ;;; neutral.lisp --- test sorters for neutrality across representations
-(load (merge-pathnames ".sbclrc" (user-homedir-pathname))
-      :if-does-not-exist (error "Need quicklisp to load dependencies"))
+(load "~/.sbclrc" :if-does-not-exist nil)
 (require 'software-evolution)
 (in-package :software-evolution)
 
@@ -17,8 +16,11 @@
 
 ;;; Program evaluation
 (defvar *test*
-  (let ((bin-dir (pathname-directory (pathname (car sb-ext:*posix-argv*)))))
-    (make-pathname :directory bin-dir :name "test" :type "sh")))
+  (format nil "~a"
+          (make-pathname
+           :directory (pathname-directory (pathname *load-truename*))
+           :name "test"
+           :type "sh")))
 (defvar *num-tests* 10)
 
 (defun run-test (phenome num)
@@ -33,7 +35,7 @@
         (count t (loop :for num :below *num-tests* :collect (run-test bin num)))
         0)))
 
-(defun neutrality (path &key (runs 500))
+(defun neutrality (path &key (runs 20))
   "Test the neutrality of the assembly program at PATH."
   (let* ((pathname (pathname path))
          (orig (from-file (make-instance 'asm) pathname))
@@ -45,7 +47,7 @@
     (assert (= *num-tests* (test-suite orig)) (orig)
             "Sanity check on the fitness of the original program")
     ;; run
-    (format t "~&~S ~S~%"
+    (format t "~&~a ~S~%"
             path
             (/ (count-if (lambda (it) (= (fitness it) *num-tests*))
                          (store (repeatedly runs

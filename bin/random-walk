@@ -2,8 +2,7 @@
 ;;; -*- common-lisp -*-
 ;;; random-walk --- Take a random walk through neutral space
 (assert nil (nil) "TODO: update this script")
-(load (merge-pathnames ".sbclrc" (user-homedir-pathname))
-      :if-does-not-exist (error "Need quicklisp to load dependencies"))
+(load "~/.sbclrc" :if-does-not-exist nil)
 (require :software-evolution)
 (in-package :software-evolution)
 
