@@ -28,7 +28,7 @@ ML_OCAMLOPT = $(foreach opt,$(ML_OPTS), $(ALGORITHMS:=_ml_ocamlopt_$(opt).s))
 TMP  = $(C_GCC) $(C_CLANG) $(CPP_GCC) $(CPP_CLANG) $(HS_GHC) $(ML_OCAMLOPT)
 OPTS = $(addprefix _, $(TMP))
 
-all: $(ASM) bin/limit
+all: $(ASM)
 
 .PHONY: clean real-clean opts neut
 
