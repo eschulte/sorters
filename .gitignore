@@ -3,6 +3,7 @@ limit
 best
 merge-broke
 merge
+a.out
 
 ## execution traces
 src/*.path

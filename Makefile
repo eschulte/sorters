@@ -12,12 +12,12 @@ ALGORITHMS= 		\
 C_SRC   = $(addprefix sorters/, $(ALGORITHMS:=-c.c))
 CPP_SRC = $(addprefix sorters/, $(ALGORITHMS:=-cpp.cpp))
 HS_SRC  = $(addprefix sorters/, $(ALGORITHMS:=-hs.hs))
-ML_SRC  = $(addprefix sorters/, $(ALGORITHMS:=-ml.ml))
+ML_SRC  = $(addprefix sorters/, $(ALGORITHMS:=_ml.ml))
 
 ASM  = $(C_SRC:.c=.s)
 ASM += $(CPP_SRC:.cpp=.s)
 ASM += $(HS_SRC:.hs=.s)
-# ASM += $(ML_SRC:.ml=.s)
+ASM += $(ML_SRC:.ml=.s)
 
 all: $(ASM) bin/limit
 .PHONY: clean
@@ -38,4 +38,4 @@ bin/limit: bin/limit.c
 	$(CC) -o $@ $<
 
 clean:
-	rm -f $(ASM) bin/limit
+	rm -f $(ASM) bin/limit sorters/*.cm* sorters/*.o
