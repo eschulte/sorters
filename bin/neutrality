@@ -1,12 +1,24 @@
 #!/usr/bin/sbcl --script
 ;;; -*- common-lisp -*-
 ;;; neutral.lisp --- test sorters for neutrality across representations
+(load "~/.sbclrc"
+      :if-does-not-exist (error "Need quicklisp to load dependencies"))
 (require 'software-evolution)
 (in-package :software-evolution)
 
-
+;;; Reproducibility
+(let ((seed-path "seed"))
+  (if (probe-file seed-path)
+      (setf *random-state* (with-open-file (in seed-path) (read in)))
+      (progn
+        (setf *random-state* (make-random-state t))
+        (with-open-file (out seed-path :direction :output)
+          (write *random-state* :stream out)))))
+
 ;;; Program evaluation
-(defvar *test* "../bin/test.sh")
+(defvar *test*
+  (let ((bin-dir (pathname-directory (pathname (car sb-ext:*posix-argv*)))))
+    (make-pathname :directory bin-dir :name "test" :type "sh")))
 (defvar *num-tests* 10)
 
 (defun run-test (phenome num)
@@ -45,5 +57,6 @@
     
     store))
 
+;;; Run
 (let ((files (cdr sb-ext:*posix-argv*)))
   (pmapcar #'neutrality files))

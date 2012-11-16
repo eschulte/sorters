@@ -1,3 +1,9 @@
+#!/usr/bin/sbcl --script
+;;; -*- common-lisp -*-
+;;; random-walk --- Take a random walk through neutral space
+(assert nil (nil) "TODO: update this script")
+(load "~/.sbclrc"
+      :if-does-not-exist (error "Need quicklisp to load dependencies"))
 (require :software-evolution)
 (in-package :software-evolution)
 
