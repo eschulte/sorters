@@ -5,6 +5,8 @@
 (require 'software-evolution)
 (in-package :software-evolution)
 
+(advise-thread-pool-size 40)
+
 ;;; Reproducibility
 (let ((seed-path "seed"))
   (if (probe-file seed-path)
@@ -15,7 +17,11 @@
           (write *random-state* :stream out)))))
 
 ;;; Program evaluation
-(setf asm-linker "wrapper 2 gcc") ;; protect from unending compilation
+(setf *work-dir*
+      (format nil "~a../sh-runner/work/"
+              (namestring
+               (make-pathname
+                :directory (pathname-directory (pathname *load-truename*))))))
 
 (defvar *test*
   (format nil "~a"
@@ -27,7 +33,7 @@
 
 (defun run-test (phenome num)
   (multiple-value-bind (output err-output exit)
-      (shell "wrapper 2 ~a ~a ~a" *test* phenome num)
+      (shell "~a ~a ~a" *test* phenome num)
     (declare (ignorable output err-output))
     (zerop exit)))
 
@@ -62,5 +68,4 @@
     store))
 
 ;;; Run
-(let ((files (cdr sb-ext:*posix-argv*)))
-  (pmapcar #'neutrality files))
+(pmapcar #'neutrality (cdr sb-ext:*posix-argv*))
