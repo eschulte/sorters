@@ -59,7 +59,9 @@
             path
             (/ (count-if (lambda (it) (= (fitness it) *num-tests*))
                          (store (repeatedly runs
-                                  (let ((new (mutate (copy orig))))
+                                  (let ((new (handler-case
+                                                 (mutate (copy orig))
+                                               (error (e) (mutate (copy orig))))))
                                     (setf (fitness new) (test-suite new))
                                     new))
                                 store))
@@ -68,4 +70,12 @@
     store))
 
 ;;; Run
-(pmapcar #'neutrality (cdr sb-ext:*posix-argv*))
+(defvar chunk)
+(setf sb-ext:*posix-argv* (cdr sb-ext:*posix-argv*))
+(let ((chunk-size 10))
+  (loop :while sb-ext:*posix-argv*
+     :do
+     (setf chunk (take chunk-size sb-ext:*posix-argv*))
+     (setf sb-ext:*posix-argv* (drop chunk-size sb-ext:*posix-argv*))
+     (pmapcar #'neutrality chunk)))
+
