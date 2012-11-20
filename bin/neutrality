@@ -1,11 +1,7 @@
 #!/usr/bin/sbcl --script
 ;;; -*- common-lisp -*-
-;;; neutral.lisp --- test sorters for neutrality across representations
-(load "~/.sbclrc" :if-does-not-exist nil)
-(require 'software-evolution)
-(in-package :software-evolution)
-
-(advise-thread-pool-size 40)
+;;; runs neutrality.lisp
+(load "./neutrality.lisp")
 
 ;;; Reproducibility
 (let ((seed-path "seed"))
@@ -16,66 +12,12 @@
         (with-open-file (out seed-path :direction :output)
           (write *random-state* :stream out)))))
 
-;;; Program evaluation
+;;; Local paths
 (setf *work-dir*
       (format nil "~a../sh-runner/work/"
               (namestring
                (make-pathname
                 :directory (pathname-directory (pathname *load-truename*))))))
 
-(defvar *test*
-  (format nil "~a"
-          (make-pathname
-           :directory (pathname-directory (pathname *load-truename*))
-           :name "test"
-           :type "sh")))
-(defvar *num-tests* 10)
-
-(defun run-test (phenome num)
-  (multiple-value-bind (output err-output exit)
-      (shell "~a ~a ~a" *test* phenome num)
-    (declare (ignorable output err-output))
-    (zerop exit)))
-
-(def-memoized-function test-suite (ast)
-  (with-temp-file (bin)
-    (if (phenome ast :bin bin)
-        (count t (loop :for num :below *num-tests* :collect (run-test bin num)))
-        0)))
-
-(defun neutrality (path &key (runs 1000))
-  "Test the neutrality of the assembly program at PATH."
-  (let* ((pathname (pathname path))
-         (orig (from-file (make-instance 'asm) pathname))
-         (store (make-pathname
-                 :directory (pathname-directory pathname)
-                 :name (pathname-name pathname)
-                 :type "store")))
-    ;; sanity
-    (assert (= *num-tests* (test-suite orig)) (orig)
-            "Sanity check on the fitness of the original program")
-    ;; run
-    (format t "~&~a ~S~%"
-            path
-            (/ (count-if (lambda (it) (= (fitness it) *num-tests*))
-                         (store (repeatedly runs
-                                  (let ((new (handler-case
-                                                 (mutate (copy orig))
-                                               (error (e) (mutate (copy orig))))))
-                                    (setf (fitness new) (test-suite new))
-                                    new))
-                                store))
-               runs))
-    
-    store))
-
 ;;; Run
-(defvar chunk)
-(setf sb-ext:*posix-argv* (cdr sb-ext:*posix-argv*))
-(let ((chunk-size 10))
-  (loop :while sb-ext:*posix-argv*
-     :do
-     (setf chunk (take chunk-size sb-ext:*posix-argv*))
-     (setf sb-ext:*posix-argv* (drop chunk-size sb-ext:*posix-argv*))
-     (pmapcar #'neutrality chunk)))
-
+(pmapcar #'neutrality (cdr sb-ext:*posix-argv*))

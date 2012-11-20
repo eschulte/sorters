@@ -34,8 +34,13 @@ all: $(ASM)
 
 opts: $(OPTS)
 
-neut: $(OPTS)
-	../bin/neutrality $(OPTS)
+neuts: opts
+	../bin/neutrality $^
+
+echo:
+	echo $(OPTS)
+
+stores: $(OPTS:.s=.store)
 
 %.s: %.c
 	$(CC) -o $@ -S $<
@@ -51,6 +56,9 @@ neut: $(OPTS)
 
 _%.s:
 	../bin/omni-compile $@
+
+%.store: %.s
+	../bin/neutrality $<
 
 clean:
 	rm -f $(ASM) $(OPTS) *.cm* *.o *.hi
