@@ -21,10 +21,12 @@
         (count t (loop :for num :below *num-tests* :collect (run-test bin num)))
         0)))
 
-(defun neutrality (path &key (runs 1000))
+(defun neutrality (path &key (runs 1000) linker)
   "Test the neutrality of the assembly program at PATH."
   (let* ((pathname (pathname path))
-         (orig (from-file (make-instance 'asm) pathname))
+         (orig (from-file (make-instance 'asm
+                            :linker linker)
+                          pathname))
          (store (make-pathname
                  :directory (pathname-directory pathname)
                  :name (pathname-name pathname)
