@@ -1,5 +1,6 @@
-CC:= gcc
+CC := gcc
 HC := ghc
+OC := ocamlopt
 
 all: check
 
@@ -7,7 +8,10 @@ all: check
 	${CC} -Ofast -o $@ $<  -lpthread
 
 %: %.hs
-	${HC} -Ofast -o $@ $<
+	${HC} -O4 -o $@ $<
+
+caps-ml: caps.ml
+	${OC} -linkall -nodynlink -o $@ $<
 
 python:
 	python setup.py build_ext --inplace
