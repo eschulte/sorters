@@ -61,6 +61,7 @@ while [ $# -gt 0 ];do
         -f|--flag)      add_cat $FLG;;
         -m|--mean)      add_act "mean";;
         -s|--sum)       add_act "sum";;
+        -g|--graph)     error "Graphical output is not yet implemented.";;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -79,7 +80,8 @@ act(){
     case $ACT in
         all)  tr '\n' ','|sed 's/.$//';;
         sum)  awk '{ sum += $1 } END { print sum; }';;
-        mean) awk '{ sum += $1 } END { print sum/NR; }';;
+        mean) awk '{ sum += $1 }
+                   END { if(NR == 0) print "NA"; else print sum/NR; }';;
     esac; }
 
 # Main
@@ -92,8 +94,17 @@ case ${#CAT[@]} in
             echo "$i $(echo "$DATA"|limit ${CAT[0]} $i|res|act)"
         done;;
     2)
-        echo "fancy";;
-esac
+        XS="$(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u)"
+        YS="$(echo "$DATA"|awk "{print \$${CAT[1]}}"|sort -u)"
+        echo "[$(echo "$XS"|wc -l)x$(echo "$YS"|wc -l)] $(echo $YS)"
+        for x in $XS;do
+            echo -n "$x "
+            for y in $YS;do
+                echo -n "$(echo "$DATA"|limit ${CAT[0]} $x|limit ${CAT[1]} $y|res|act) "
+            done
+            echo ""
+        done;;
+esac|column -t
 exit 0;
 
 
