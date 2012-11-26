@@ -3,26 +3,29 @@
 # Usage: neutral.data [options|categories|actions...]
 #
 # Options:
-#  -h --help ------------ print this help message
-#  -i --include REGEX --- include items matching REGEX in results
-#  -e --exclude REGEX --- exclude items matching REGEX from results
+#  -h --help ------------- print this help message
+#  -i --include CAT=STR -- include items with CAT=STR in results
+#  -e --exclude CAT=STR -- exclude items with CAT=STR from results
+#  -b --by [CATS] -------- group results by CATS (comma separated)
 #
 # Actions (specify at most one to reduce results):
-#  -m --mean ------------ mean of all matching results
-#  -s --sum ------------- mean of all matching results
-#  -g --graph ----------- graph matching results (requires feedgnuplot)
+#  -m --mean ------------- mean of all matching results
+#  -s --sum -------------- mean of all matching results
 #
-# Categories (specify at most two to group results by):
-#  -a --algorithm
-#  -l --language
-#  -c --compiler
-#  -f --flag
+# Categories:
+#  One of algorithm, language, compiler, flag.  Substrings may be
+#  used, e.g., "a" for "algorithm".
 #
 error(){ echo "$0: $@" >&2; exit 1; }
 ACT="all"
-INC=""
-EXC=""
-declare -A CAT
+declare -a INC
+declare -a EXC
+declare -a CAT
+row(){ # match categories to rows in the data
+    case $1 in
+        a*) echo 1;; l*) echo 2;; c*) echo 3;; f*) echo 4;;
+        *) error "Category '$i' does not match any category.";;
+    esac; }
 add_cat(){
     local cat="$1";
     local length=${#CAT[@]};
@@ -32,10 +35,16 @@ add_act(){
     local act="$1";
     if [ ! "$ACT" == "all" ];then error "Can specify at most one action.";
                              else ACT=$act; fi; }
-ALG=1
-LAN=2
-CMP=3
-FLG=4
+add_inc_exp(){
+    local type=$1;
+    local pair="$2";
+    local cat="$(row $(echo "$pair"|sed 's/=.*$//'))"
+    local it="$(echo "$pair"|sed 's/^.*=//')"
+    case $type in
+        "INC") INC+=($cat); INC+=($it);;
+        "EXC") EXC+=($cat); EXC+=($it);;
+        *) error "Impossible type $type.";;
+    esac; }
 RES=5
 DATA="$(cat "$0"|sed -n '/^DATA:/,$p'|tail --lines=+2)"
 
@@ -45,23 +54,28 @@ HELP_TEXT=$(cat "$0" \
         |tail -n +3 \
         |sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' \
         |cut -c3-)
+
 eval set -- $(getopt \
-    -o hi:e:alcfmsg \
-    -l help,include:,exclude:,algorithm,language,compiler,flag,mean,sum,graph \
+    -o hi:e:b:ms \
+    -l help,include:,exclude:,by:,mean,sum \
     -- $@ || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
     case $1 in
         -h|--help)      echo "$HELP_TEXT" && exit 1;;
-        -i|--include)   INC="$2"; shift;;
-        -e|--exclude)   EXC="$2"; shift;;
-        -a|--algorithm) add_cat $ALG;;
-        -l|--language)  add_cat $LAN;;
-        -c|--compiler)  add_cat $CMP;;
-        -f|--flag)      add_cat $FLG;;
+        -i|--include)   add_inc_exp "INC" "$2"; shift;;
+        -e|--exclude)   add_inc_exp "EXC" "$2"; shift;;
+        -b|--by)
+            SAVE="$IFS"
+            IFS=","
+            for i in $2;do
+                row $i >/dev/null || exit 1
+                add_cat $(row $i)
+            done
+            shift;
+            IFS="$SAVE";;
         -m|--mean)      add_act "mean";;
         -s|--sum)       add_act "sum";;
-        -g|--graph)     error "Graphical output is not yet implemented.";;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -70,28 +84,38 @@ while [ $# -gt 0 ];do
 done
 
 # Functions
-limit(){
+include(){
     local cat=$1; local match=$2;
     awk "{ if (\$$cat == \"$match\") print \$0; }"; }
+
+exclude(){
+    local cat=$1; local match=$2;
+    awk "{ if (\$$cat != \"$match\") print \$0; }"; }
 
 res(){ awk "{ print \$$RES; }"; }
 
 act(){
     case $ACT in
         all)  tr '\n' ','|sed 's/.$//';;
-        sum)  awk '{ sum += $1 } END { print sum; }';;
+        sum)  awk '{ sum += $1 }
+                   END { if(NR == 0) print "NA"; else print sum; }';;
         mean) awk '{ sum += $1 }
                    END { if(NR == 0) print "NA"; else print sum/NR; }';;
     esac; }
 
 # Main
-if [ ! -z "$INC" ];then DATA="$(echo "$DATA"|grep "$INC")"; fi
-if [ ! -z "$EXC" ];then DATA="$(echo "$DATA"|grep -v "$EXC")"; fi
+for ((i=0; i<${#INC[@]}; i+=2));do
+    DATA="$(echo "$DATA"|include ${INC[i]} ${INC[i+1]})"
+done
+for ((i=0; i<${#EXC[@]}; i+=2));do
+    DATA="$(echo "$DATA"|exclude ${EXC[i]} ${EXC[i+1]})"
+done
+
 case ${#CAT[@]} in
     0) echo "$DATA";;
     1)
         for i in $(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u);do
-            echo "$i $(echo "$DATA"|limit ${CAT[0]} $i|res|act)"
+            echo "$i $(echo "$DATA"|include ${CAT[0]} $i|res|act)"
         done;;
     2)
         XS="$(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u)"
@@ -100,7 +124,7 @@ case ${#CAT[@]} in
         for x in $XS;do
             echo -n "$x "
             for y in $YS;do
-                echo -n "$(echo "$DATA"|limit ${CAT[0]} $x|limit ${CAT[1]} $y|res|act) "
+                echo -n "$(echo "$DATA"|include ${CAT[0]} $x|include ${CAT[1]} $y|res|act) "
             done
             echo ""
         done;;
