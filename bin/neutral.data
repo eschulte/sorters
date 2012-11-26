@@ -18,7 +18,7 @@
 #  -c --compiler
 #  -f --flag
 #
-error(){ echo "$@" >&2; exit 1; }
+error(){ echo "$0: $@" >&2; exit 1; }
 ACT="all"
 INC=""
 EXC=""
@@ -62,26 +62,38 @@ while [ $# -gt 0 ];do
         -m|--mean)      add_act "mean";;
         -s|--sum)       add_act "sum";;
         (--) shift; break;;
-        (-*) error "$0: error -- unrecognized option $1";;
+        (-*) error "unrecognized option $1";;
         (*)  break;;
     esac
     shift
 done
 
 # Functions
+limit(){
+    local cat=$1; local match=$2;
+    awk "{ if (\$$cat == \"$match\") print \$0; }"; }
+
+res(){ awk "{ print \$$RES; }"; }
+
 act(){
-    case $1 in
-        all)  cat;;
+    case $ACT in
+        all)  tr '\n' ','|sed 's/.$//';;
         sum)  awk '{ sum += $1 } END { print sum; }';;
         mean) awk '{ sum += $1 } END { print sum/NR; }';;
-    esac
-}
+    esac; }
 
 # Main
 if [ ! -z "$INC" ];then DATA="$(echo "$DATA"|grep "$INC")"; fi
 if [ ! -z "$EXC" ];then DATA="$(echo "$DATA"|grep -v "$EXC")"; fi
-echo "$DATA"|act $ACT
-
+case ${#CAT[@]} in
+    0) echo "$DATA";;
+    1)
+        for i in $(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u);do
+            echo "$i $(echo "$DATA"|limit ${CAT[0]} $i|res|act)"
+        done;;
+    2)
+        echo "fancy";;
+esac
 exit 0;
 
 
