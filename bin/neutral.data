@@ -1,0 +1,148 @@
+#!/bin/bash
+#
+# Usage: neutral.data [options|categories|actions...]
+#
+# Options:
+#  -h --help ------------ print this help message
+#  -i --include REGEX --- include items matching REGEX in results
+#  -e --exclude REGEX --- exclude items matching REGEX from results
+#
+# Actions (specify at most one to reduce results):
+#  -m --mean ------------ mean of all matching results
+#  -s --sum ------------- mean of all matching results
+#  -g --graph ----------- graph matching results (requires feedgnuplot)
+#
+# Categories (specify at most two to group results by):
+#  -a --algorithm
+#  -l --language
+#  -c --compiler
+#  -f --flag
+#
+error(){ echo "$@" >&2; exit 1; }
+ACT="all"
+INC=""
+EXC=""
+declare -A CAT
+add_cat(){
+    local cat="$1";
+    local length=${#CAT[@]};
+    if [ $length -gt 1 ];then error "Can specify at most two categories.";
+                         else CAT[$length]=$cat; fi; }
+add_act(){
+    local act="$1";
+    if [ ! "$ACT" == "all" ];then error "Can specify at most one action.";
+                             else ACT=$act; fi; }
+ALG=1
+LAN=2
+CMP=3
+FLG=4
+RES=5
+DATA="$(cat "$0"|sed -n '/^DATA:/,$p'|tail --lines=+2)"
+
+HELP_TEXT=$(cat "$0" \
+        |sed '/^[^#]/q' \
+        |head -n -1 \
+        |tail -n +3 \
+        |sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' \
+        |cut -c3-)
+eval set -- $(getopt \
+    -o hi:e:alcfmsg \
+    -l help,include:,exclude:,algorithm,language,compiler,flag,mean,sum,graph \
+    -- $@ || echo "$HELP_TEXT" && exit 1;)
+
+while [ $# -gt 0 ];do
+    case $1 in
+        -h|--help)      echo "$HELP_TEXT" && exit 1;;
+        -i|--include)   INC="$2"; shift;;
+        -e|--exclude)   EXC="$2"; shift;;
+        -a|--algorithm) add_cat $ALG;;
+        -l|--language)  add_cat $LAN;;
+        -c|--compiler)  add_cat $CMP;;
+        -f|--flag)      add_cat $FLG;;
+        -m|--mean)      add_act "mean";;
+        -s|--sum)       add_act "sum";;
+        (--) shift; break;;
+        (-*) error "$0: error -- unrecognized option $1";;
+        (*)  break;;
+    esac
+    shift
+done
+
+# Functions
+act(){
+    case $1 in
+        all)  cat;;
+        sum)  awk '{ sum += $1 } END { print sum; }';;
+        mean) awk '{ sum += $1 } END { print sum/NR; }';;
+    esac
+}
+
+# Main
+if [ ! -z "$INC" ];then DATA="$(echo "$DATA"|grep "$INC")"; fi
+if [ ! -z "$EXC" ];then DATA="$(echo "$DATA"|grep -v "$EXC")"; fi
+echo "$DATA"|act $ACT
+
+exit 0;
+
+
+# The rest of the file should be raw data.
+DATA:
+bubble cpp g++ O0 395
+bubble cpp g++ O2 412
+bubble cpp g++ O3 394
+bubble cpp g++ Ofast 411
+bubble cpp g++ Os 394
+insertion c clang O0 393
+insertion c clang O1 469
+insertion c clang O2 567
+insertion c clang O3 506
+insertion c clang Os 433
+insertion c clang Oz 454
+insertion c gcc O0 307
+insertion c gcc O1 337
+insertion c gcc O2 338
+insertion c gcc O3 356
+insertion c gcc Ofast 337
+insertion c gcc Os 342
+insertion cpp g++ O0 524
+insertion cpp g++ O1 444
+insertion cpp g++ O2 496
+insertion cpp g++ O3 573
+insertion cpp g++ Ofast 542
+insertion cpp g++ Os 472
+merge c clang O0 336
+merge c clang O1 432
+merge c clang O2 500
+merge c clang O3 510
+merge c clang Os 388
+merge c clang Oz 379
+merge c gcc O0 299
+merge c gcc O1 317
+merge c gcc O2 330
+merge c gcc O3 345
+merge c gcc Ofast 312
+merge c gcc Os 309
+merge cpp g++ O0 592
+merge cpp g++ O1 658
+merge cpp g++ O2 721
+merge cpp g++ O3 697
+merge cpp g++ Ofast 662
+merge cpp g++ Os 628
+quick c clang O0 402
+quick c clang O1 464
+quick c clang O2 457
+quick c clang O3 475
+quick c clang Os 458
+quick c clang Oz 430
+quick c gcc O0 341
+quick c gcc O1 317
+quick c gcc O2 347
+quick c gcc O3 376
+quick c gcc Ofast 379
+quick c gcc Os 299
+quick cpp g++ O0 468
+quick cpp g++ O1 417
+quick cpp g++ O2 407
+quick cpp g++ O3 455
+quick cpp g++ Ofast 469
+quick cpp g++ Os 413
