@@ -1,24 +1,27 @@
 #!/bin/bash
 #
-# Usage: neutral.data [options|categories|actions...]
+# Usage: neutral.data [options...] [action]
 #
 # Options:
 #  -h --help ------------- print this help message
 #  -i --include CAT=STR -- include items with CAT=STR in results
 #  -e --exclude CAT=STR -- exclude items with CAT=STR from results
-#  -b --by [CATS] -------- group results by CATS (comma separated)
+#  -b --by [CAT,...] ----- group results by CATs (comma separated)
+#  -o --output FILE ------ save output to file
+#  -g --graph ------------ graph mean of results (requires feedgnuplot)
 #
 # Actions (specify at most one to reduce results):
 #  -m --mean ------------- mean of all matching results
 #  -s --sum -------------- mean of all matching results
-#  -g --graph ------------ graph mean of results (requires feedgnuplot)
 #
-# Categories:
+# Categories (CAT):
 #  One of algorithm, language, compiler, flag.  Substrings may be
 #  used, e.g., "a" for "algorithm".
 #
 error(){ echo "$0: $@" >&2; exit 1; }
 ACT="all"
+OUT=""
+GRAPH=""
 declare -a INC
 declare -a EXC
 declare -a CAT
@@ -57,8 +60,8 @@ HELP_TEXT=$(cat "$0" \
         |cut -c3-)
 
 eval set -- $(getopt \
-    -o hi:e:b:msg \
-    -l help,include:,exclude:,by:,mean,sum,graph \
+    -o hi:e:b:msgo: \
+    -l help,include:,exclude:,by:,mean,sum,graph,output: \
     -- $@ || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
@@ -77,7 +80,8 @@ while [ $# -gt 0 ];do
             IFS="$SAVE";;
         -m|--mean)      add_act "mean";;
         -s|--sum)       add_act "sum";;
-        -g|--graph)     add_act "graph";;
+        -g|--graph)     GRAPH="yes";;
+        -o|--output)    OUT="$2"; shift;;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -101,18 +105,21 @@ act(){
         all)  tr '\n' ','|sed 's/.$//';;
         sum)  awk '{ sum += $1 }
                    END { if(NR == 0) print "NA"; else print sum; }';;
-        mean|graph) awk '{ sum += $1 }
+        mean) awk '{ sum += $1 }
                    END { if(NR == 0) print "NA"; else print sum/NR; }';;
     esac; }
 
 post_process(){
-    if [ "$ACT" == "graph" ];then
+    if [ ! -z "$GRAPH" ];then
         if [ $(which feedgnuplot >/dev/null 2>/dev/null) ];then
             error "Graphing requires the feedgnuplot executable."
+        elif [ "$ACT" == "all" ];then
+            error "Can't graph all results, must use mean or sum."
         elif [ ${#CAT[@]} -ne 1 ];then
             error "Can only graph a single category at a time."
         else
-            feedgnuplot \
+            if [ ! -z "$OUT" ];then OUT=" --hardcopy $OUT "; fi
+            feedgnuplot $OUT \
                 -ymin 0 \
                 --extracmds 'set style fill solid border -1;' \
                 --histogram 2 \
@@ -121,7 +128,12 @@ post_process(){
                 --autolegen
         fi
     else
-        column -t
+        if [ ! -z "$OUT" ];then
+            cat >$OUT
+            echo "Wrote output to $OUT"
+        else
+            column -t
+        fi
     fi; }
 
 # Main
