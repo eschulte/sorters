@@ -32,6 +32,7 @@
 #     
 #
 error(){ echo "$0: $@" >&2; exit 1; }
+TITLE="$0 $@"
 ACT="all"
 OUT=""
 GRAPH=""
@@ -133,6 +134,7 @@ post_process(){
         else
             if [ ! -z "$OUT" ];then OUT=" --hardcopy $OUT "; fi
             feedgnuplot $OUT \
+                --title "$TITLE" \
                 -ymin 0 \
                 --extracmds 'set style fill solid border -1;' \
                 --histogram 2 \
@@ -142,7 +144,8 @@ post_process(){
         fi
     else
         if [ ! -z "$OUT" ];then
-            cat >$OUT
+            echo "# $TITLE">$OUT
+            cat >>$OUT
             echo "Wrote output to $OUT"
         else
             column -t
