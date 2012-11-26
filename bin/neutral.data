@@ -11,6 +11,7 @@
 # Actions (specify at most one to reduce results):
 #  -m --mean ------------- mean of all matching results
 #  -s --sum -------------- mean of all matching results
+#  -g --graph ------------ graph mean of results (requires feedgnuplot)
 #
 # Categories:
 #  One of algorithm, language, compiler, flag.  Substrings may be
@@ -56,8 +57,8 @@ HELP_TEXT=$(cat "$0" \
         |cut -c3-)
 
 eval set -- $(getopt \
-    -o hi:e:b:ms \
-    -l help,include:,exclude:,by:,mean,sum \
+    -o hi:e:b:msg \
+    -l help,include:,exclude:,by:,mean,sum,graph \
     -- $@ || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
@@ -76,6 +77,7 @@ while [ $# -gt 0 ];do
             IFS="$SAVE";;
         -m|--mean)      add_act "mean";;
         -s|--sum)       add_act "sum";;
+        -g|--graph)     add_act "graph";;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -84,11 +86,11 @@ while [ $# -gt 0 ];do
 done
 
 # Functions
-include(){
+inc(){
     local cat=$1; local match=$2;
     awk "{ if (\$$cat == \"$match\") print \$0; }"; }
 
-exclude(){
+exc(){
     local cat=$1; local match=$2;
     awk "{ if (\$$cat != \"$match\") print \$0; }"; }
 
@@ -99,23 +101,42 @@ act(){
         all)  tr '\n' ','|sed 's/.$//';;
         sum)  awk '{ sum += $1 }
                    END { if(NR == 0) print "NA"; else print sum; }';;
-        mean) awk '{ sum += $1 }
+        mean|graph) awk '{ sum += $1 }
                    END { if(NR == 0) print "NA"; else print sum/NR; }';;
     esac; }
 
+post_process(){
+    if [ "$ACT" == "graph" ];then
+        if [ $(which feedgnuplot >/dev/null 2>/dev/null) ];then
+            error "Graphing requires the feedgnuplot executable."
+        elif [ ${#CAT[@]} -ne 1 ];then
+            error "Can only graph a single category at a time."
+        else
+            feedgnuplot \
+                -ymin 0 \
+                --extracmds 'set style fill solid border -1;' \
+                --histogram 2 \
+                --curvestyleall 'with boxes' \
+                --dataid \
+                --autolegen
+        fi
+    else
+        column -t
+    fi; }
+
 # Main
 for ((i=0; i<${#INC[@]}; i+=2));do
-    DATA="$(echo "$DATA"|include ${INC[i]} ${INC[i+1]})"
+    DATA="$(echo "$DATA"|inc ${INC[i]} ${INC[i+1]})"
 done
 for ((i=0; i<${#EXC[@]}; i+=2));do
-    DATA="$(echo "$DATA"|exclude ${EXC[i]} ${EXC[i+1]})"
+    DATA="$(echo "$DATA"|exc ${EXC[i]} ${EXC[i+1]})"
 done
 
 case ${#CAT[@]} in
     0) echo "$DATA";;
     1)
         for i in $(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u);do
-            echo "$i $(echo "$DATA"|include ${CAT[0]} $i|res|act)"
+            echo "$i $(echo "$DATA"|inc ${CAT[0]} $i|res|act)"
         done;;
     2)
         XS="$(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u)"
@@ -124,11 +145,11 @@ case ${#CAT[@]} in
         for x in $XS;do
             echo -n "$x "
             for y in $YS;do
-                echo -n "$(echo "$DATA"|include ${CAT[0]} $x|include ${CAT[1]} $y|res|act) "
+                echo -n "$(echo "$DATA"|inc ${CAT[0]} $x|inc ${CAT[1]} $y|res|act) "
             done
             echo ""
         done;;
-esac|column -t
+esac|post_process
 exit 0;
 
 
