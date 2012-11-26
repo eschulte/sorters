@@ -4,11 +4,11 @@
 #
 # Options:
 #  -h --help ------------- print this help message
-#  -i --include CAT=STR -- include items with CAT=STR in results
+#  -i --include CAT=STR -- only include items with CAT=STR in results
 #  -e --exclude CAT=STR -- exclude items with CAT=STR from results
 #  -b --by [CAT,...] ----- group results by CATs (comma separated)
-#  -o --output FILE ------ save output to file
 #  -g --graph ------------ graph mean of results (requires feedgnuplot)
+#  -o --output FILE ------ save output to FILE
 #
 # Actions (specify at most one to reduce results):
 #  -m --mean ------------- mean of all matching results
@@ -17,6 +17,19 @@
 # Categories (CAT):
 #  One of algorithm, language, compiler, flag.  Substrings may be
 #  used, e.g., "a" for "algorithm".
+#
+# Examples:
+#
+#   to print a table of the mean neutrality by algorithm and language,
+#   use:
+#
+#     neutral.data -b lang,alg -m
+#   
+#   to calculate the mean neutrality by compiler, and graph the
+#   results to an svg file, use:
+#   
+#     neutral.data -b comp -m -g -o /tmp/by-lang.svg
+#     
 #
 error(){ echo "$0: $@" >&2; exit 1; }
 ACT="all"
