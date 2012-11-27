@@ -1,5 +1,5 @@
 CC=gcc
-DC=./bin/data-viewer
+DC=data-wrapper
 
 NEUT_COLUMNS= algorithm language compiler flag result
 
@@ -10,7 +10,7 @@ all: asms opts bin/limit
 bin/limit: bin/limit.c
 	$(CC) -o $@ $<
 
-results/neut-viewer: results/neut $(DC)
+results/neut-viewer: results/neut
 	$(DC) $< $(NEUT_COLUMNS)
 
 asms:
