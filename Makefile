@@ -1,4 +1,7 @@
 CC=gcc
+DC=./bin/data-viewer
+
+NEUT_COLUMNS= algorithm language compiler flag result
 
 all: asms opts bin/limit
 
@@ -6,6 +9,9 @@ all: asms opts bin/limit
 
 bin/limit: bin/limit.c
 	$(CC) -o $@ $<
+
+results/neut-viewer: results/neut $(DC)
+	$(DC) $< $(NEUT_COLUMNS)
 
 asms:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);

@@ -30,9 +30,11 @@ repair*
 ## NFS
 .nfs*
 
-## recent running cruft
+## running cruft
 insertion.c
 sort
 trace
 scratch
 sh-runner
+.RData
+.Rhistory

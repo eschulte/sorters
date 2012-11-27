@@ -31,12 +31,14 @@ SCRIPTFILE="$DATAFILE-viewer"
 declare -a COLUMNS
 COUNTER=1
 CASE=""
+COL_TEXT=""
 for col in $@;do
     COLUMNS[$COUNTER]=$col
     if [ "$col" == "result" ];then
         RES=$COUNTER;
     else
         CASE+="$(echo $col|cut -c-1)*) echo $COUNTER;; "
+        COL_TEXT+="$col, "
     fi
     COUNTER=$(expr $COUNTER + 1)
 done
@@ -44,11 +46,14 @@ COL1=$(echo ${COLUMNS[1]}|cut -c1-4)
 COL2=$(echo ${COLUMNS[2]}|cut -c1-4)
 
 SED="s/SCRIPT/$(basename $SCRIPTFILE)/g;"
+SED+="s/COLUMNS/${COL_TEXT%??}/g;"
 SED+="s/COL1/$COL1/g;"
 SED+="s/COL2/$COL2/g;"
 SED+="s/RES/$RES/g;"
 SED+="s/CASE/$CASE/g;"
+
 # echo "$SED"
+# exit 0
 
 echo "$SCRIPT"|sed "$SED" > $SCRIPTFILE
 cat "$DATAFILE" >> $SCRIPTFILE
@@ -56,6 +61,7 @@ chmod +x $SCRIPTFILE
 echo "Wrote script to $SCRIPTFILE."
 exit 0;
 
+
 SCRIPT:
 #!/bin/bash
 #
@@ -72,9 +78,11 @@ SCRIPT:
 # Actions (specify at most one to reduce results):
 #  -m --mean ------------- mean of all matching results
 #  -s --sum -------------- mean of all matching results
+#  -t --test ------------- t test between all groups of results
+#                          (use at most one category, requires Rscript)
 #
 # Categories (CAT):
-#  One of algorithm, language, compiler, flag.  Substrings may be
+#  One of COLUMNS.  Substrings may be
 #  used, e.g., "a" for "algorithm".
 #
 # Examples:
@@ -132,8 +140,8 @@ HELP_TEXT=$(cat "$0" \
         |cut -c3-)
 
 eval set -- $(getopt \
-    -o hi:e:b:msgo: \
-    -l help,include:,exclude:,by:,mean,sum,graph,output: \
+    -o hi:e:b:mstgo: \
+    -l help,include:,exclude:,by:,mean,sum,test,graph,output: \
     -- $@ || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
@@ -152,6 +160,7 @@ while [ $# -gt 0 ];do
             IFS="$SAVE";;
         -m|--mean)      add_act "mean";;
         -s|--sum)       add_act "sum";;
+        -t|--test)      add_act "test";;
         -g|--graph)     GRAPH="yes";;
         -o|--output)    OUT="$2"; shift;;
         (--) shift; break;;
@@ -181,12 +190,29 @@ act(){
                    END { if(NR == 0) print "NA"; else print sum/NR; }';;
     esac; }
 
+transpose(){
+    awk '{ for (f=1; f<=NF; f++) a[NR, f] = $f }
+         NF > nf { nf = NF }
+         END { for (f=1; f<= nf; f++)
+                 for (r=1; r<=NR; r++)
+                     printf a[r,f] (r==NR ? RS : FS); }'; }
+t_script=""
+t_script+='d <- read.table("stdin", header=FALSE, fill=TRUE); '
+t_script+='x <- as.vector(d[1]); col1 <- x[!is.na(x)]; '
+t_script+='y <- as.vector(d[2]); col2 <- y[!is.na(y)]; '
+t_script+='t.test(col1,col2)'
+t_test(){
+    transpose|Rscript -e "$t_script" \
+        |sed 's/,//g;s/=//g' \
+        |grep p-value \
+        |awk '{printf "%s(%s)", $2, $6}'; }
+
 post_process(){
     if [ ! -z "$GRAPH" ];then
         if [ $(which feedgnuplot >/dev/null 2>/dev/null) ];then
             error "Graphing requires the feedgnuplot executable."
-        elif [ "$ACT" == "all" ];then
-            error "Can't graph all results, must use mean or sum."
+        elif ([ "$ACT" == "all" ] || [ "$ACT" == "test" ]);then
+            error "Can't graph $ACT results, must use mean or sum."
         elif [ ${#CAT[@]} -ne 1 ];then
             error "Can only graph a single category at a time."
         else
@@ -221,17 +247,35 @@ done
 case ${#CAT[@]} in
     0) echo "$DATA";;
     1)
-        for i in $(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u);do
-            echo "$i $(echo "$DATA"|inc ${CAT[0]} $i|res|act)"
-        done;;
+        CATS="$(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u)"
+        if [ "$ACT" == "test" ];then
+            echo "[$(echo "$CATS"|wc -l)x$(echo "$CATS"|wc -l)] $(echo $CATS)"
+            for x in $CATS;do
+                XS="$(echo "$DATA"|inc ${CAT[0]} $x|res)"
+                echo -n "$x"
+                for y in $CATS;do
+                    YS="$(echo "$DATA"|inc ${CAT[0]} $y|res)"
+                    sets="$(echo "$(echo "$XS"|tr '\n' ' ')";echo "$(echo "$YS"|tr '\n' ' ')")"
+                    echo -n " $(echo "$sets"|t_test)"
+                done
+                echo ""
+            done
+        else
+            for i in $CATS;do
+                echo "$i $(echo "$DATA"|inc ${CAT[0]} $i|res|act)"
+            done
+        fi;;
     2)
+        if [ "$ACT" == "test" ];then
+            error "Can group by at most one column when running a T test."
+        fi
         XS="$(echo "$DATA"|awk "{print \$${CAT[0]}}"|sort -u)"
         YS="$(echo "$DATA"|awk "{print \$${CAT[1]}}"|sort -u)"
         echo "[$(echo "$XS"|wc -l)x$(echo "$YS"|wc -l)] $(echo $YS)"
         for x in $XS;do
-            echo -n "$x "
+            echo -n "$x"
             for y in $YS;do
-                echo -n "$(echo "$DATA"|inc ${CAT[0]} $x|inc ${CAT[1]} $y|res|act) "
+                echo -n " $(echo "$DATA"|inc ${CAT[0]} $x|inc ${CAT[1]} $y|res|act)"
             done
             echo ""
         done;;
