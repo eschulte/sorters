@@ -16,6 +16,7 @@ quick
 *.store
 *.output
 *.stdout
+_*
 bubble-c
 bubble-cpp
 bubble-hs

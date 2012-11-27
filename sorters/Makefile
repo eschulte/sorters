@@ -27,12 +27,14 @@ HS_GHC      = $(foreach opt,$(GHC_OPTS), $(ALGORITHMS:=_hs_ghc_$(opt).s))
 ML_OCAMLOPT = $(foreach opt,$(ML_OPTS), $(ALGORITHMS:=_ml_ocamlopt_$(opt).s))
 TMP  = $(C_GCC) $(C_CLANG) $(CPP_GCC) $(CPP_CLANG) $(HS_GHC) $(ML_OCAMLOPT)
 OPTS = $(addprefix _, $(TMP))
+EXES = $(OPTS:.s=)
 
 all: $(ASM)
 
-.PHONY: clean real-clean opts neut
+.PHONY: clean real-clean opts exes neut
 
 opts: $(OPTS)
+exes: $(EXES)
 
 neuts: opts
 	../bin/neutrality $^
@@ -57,11 +59,14 @@ stores: $(OPTS:.s=.store)
 _%.s:
 	../bin/omni-compile $@
 
+_%: _%.s
+	../bin/omni-link $<
+
 %.store: %.s
 	../bin/neutrality $<
 
 clean:
-	rm -f $(ASM) $(OPTS) *.cm* *.o *.hi
+	rm -f $(ASM) $(OPTS) $(EXES) *.cm* *.o *.hi
 
 real-clean: clean
 	rm -f $(OPTS:.s=.store)

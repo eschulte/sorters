@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Usage: omni-link _algorithm_lang_comp_opt.s
+# link the target using COMP
+#
+TARGET=$1
+echo $TARGET|grep "_.*_.*_.*_.*.s">/dev/null||(echo "bad input">&2;exit 1)
+part(){ basename $TARGET .s|cut -c2-|awk "BEGIN{FS=\"_\"} {print \$$1}"; }
+
+DIR=$(dirname $TARGET)
+CMP=$(part 3)
+
+CMD="${CMP} -o ${DIR}/$(basename $TARGET .s) ${DIR}/$TARGET"
+echo $CMD
+$CMD
