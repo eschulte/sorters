@@ -221,6 +221,7 @@ post_process(){
                 --title "$TITLE" \
                 -ymin 0 \
                 --extracmds 'set style fill solid border -1;' \
+                --extracmds 'set key out right;' \
                 --histogram 2 \
                 --curvestyleall 'with boxes' \
                 --dataid \
