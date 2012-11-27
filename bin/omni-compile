@@ -13,6 +13,10 @@ LNG=$(part 2)
 CMP=$(part 3)
 OPT=$(part 4)
 
-CMD="${CMP} -o ${TARGET} -S ${DIR}/${ALG}_${LNG}.${LNG} -${OPT}"
+if [ "$DIR" == "." ];then
+    CMD="${CMP} -o ${TARGET} -S ${ALG}_${LNG}.${LNG} -${OPT}"
+else
+    CMD="${CMP} -o ${TARGET} -S ${DIR}/${ALG}_${LNG}.${LNG} -${OPT}"
+fi
 echo $CMD
 $CMD

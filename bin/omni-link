@@ -10,6 +10,10 @@ part(){ basename $TARGET .s|cut -c2-|awk "BEGIN{FS=\"_\"} {print \$$1}"; }
 DIR=$(dirname $TARGET)
 CMP=$(part 3)
 
-CMD="${CMP} -o ${DIR}/$(basename $TARGET .s) ${DIR}/$TARGET"
+if [ "$DIR" == "." ];then
+    CMD="${CMP} -o $(basename $TARGET .s) $TARGET"
+else
+    CMD="${CMP} -o ${DIR}/$(basename $TARGET .s) ${DIR}/$TARGET"
+fi
 echo $CMD
 $CMD

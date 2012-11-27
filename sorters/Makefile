@@ -57,10 +57,10 @@ stores: $(OPTS:.s=.store)
 	$(OC) -dstartup -S $<
 
 _%.s:
-	../bin/omni-compile $@
+	@../bin/omni-compile $@
 
 _%: _%.s
-	../bin/omni-link $<
+	@../bin/omni-link $<
 
 %.store: %.s
 	../bin/neutrality $<
