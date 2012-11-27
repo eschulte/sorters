@@ -1,6 +1,65 @@
 #!/bin/bash
 #
-# Usage: neutral.data [options...] [action]
+# Usage: data-viewer DATAFILE [COLUMNS]
+#
+#  Create an executable from DATAFILE which may be run to provide
+#  different views of the data.
+#
+#  All remaining arguments (i.e., COLUMNS) should be the names of the
+#  columns of data in DATAFILE in order.  Name the column holding the
+#  data "result".  So for example, with data like the following,
+#
+#     bubble cpp g++ O0 395
+#     bubble cpp g++ O2 412
+#     insertion c clang O0 393
+#     insertion c clang O1 469
+#     insertion c gcc O0 307
+#     insertion c gcc O1 337
+#     ...
+#
+#  Run the following to generate an executable data viewer named
+#  neut-viewer.
+#
+#     data-viewer neut algorithm language compiler flag result
+#
+#  TODO: Instead of assuming the first letter of every column in
+#        unique, actually calculate the unique prefixes.
+#
+SCRIPT="$(cat "$0"|sed -n '/^SCRIPT:/,$p'|tail --lines=+2)"
+DATAFILE="$1"; shift;
+SCRIPTFILE="$DATAFILE-viewer"
+declare -a COLUMNS
+COUNTER=1
+CASE=""
+for col in $@;do
+    COLUMNS[$COUNTER]=$col
+    if [ "$col" == "result" ];then
+        RES=$COUNTER;
+    else
+        CASE+="$(echo $col|cut -c-1)*) echo $COUNTER;; "
+    fi
+    COUNTER=$(expr $COUNTER + 1)
+done
+COL1=$(echo ${COLUMNS[1]}|cut -c1-4)
+COL2=$(echo ${COLUMNS[2]}|cut -c1-4)
+
+SED="s/SCRIPT/$(basename $SCRIPTFILE)/g;"
+SED+="s/COL1/$COL1/g;"
+SED+="s/COL2/$COL2/g;"
+SED+="s/RES/$RES/g;"
+SED+="s/CASE/$CASE/g;"
+# echo "$SED"
+
+echo "$SCRIPT"|sed "$SED" > $SCRIPTFILE
+cat "$DATAFILE" >> $SCRIPTFILE
+chmod +x $SCRIPTFILE
+echo "Wrote script to $SCRIPTFILE."
+exit 0;
+
+SCRIPT:
+#!/bin/bash
+#
+# Usage: SCRIPT [options...] [action]
 #
 # Options:
 #  -h --help ------------- print this help message
@@ -20,15 +79,14 @@
 #
 # Examples:
 #
-#   to print a table of the mean neutrality by algorithm and language,
-#   use:
+#   to print a table of the mean value by COL1 and COL2, use:
 #
-#     neutral.data -b lang,alg -m
+#     SCRIPT -b COL1,COL2 -m
 #   
-#   to calculate the mean neutrality by compiler, and graph the
-#   results to an svg file, use:
+#   to calculate the total value by COL1, and graph the results to an
+#   svg file, use:
 #   
-#     neutral.data -b comp -m -g -o /tmp/by-lang.svg
+#     SCRIPT -b COL1 -m -g -o /tmp/by-lang.svg
 #     
 #
 error(){ echo "$0: $@" >&2; exit 1; }
@@ -41,7 +99,7 @@ declare -a EXC
 declare -a CAT
 row(){ # match categories to rows in the data
     case $1 in
-        a*) echo 1;; l*) echo 2;; c*) echo 3;; f*) echo 4;;
+        CASE
         *) error "Category '$i' does not match any category.";;
     esac; }
 add_cat(){
@@ -63,7 +121,7 @@ add_inc_exp(){
         "EXC") EXC+=($cat); EXC+=($it);;
         *) error "Impossible type $type.";;
     esac; }
-RES=5
+
 DATA="$(cat "$0"|sed -n '/^DATA:/,$p'|tail --lines=+2)"
 
 HELP_TEXT=$(cat "$0" \
@@ -112,7 +170,7 @@ exc(){
     local cat=$1; local match=$2;
     awk "{ if (\$$cat != \"$match\") print \$0; }"; }
 
-res(){ awk "{ print \$$RES; }"; }
+res(){ awk '{ print $RES; }'; }
 
 act(){
     case $ACT in
