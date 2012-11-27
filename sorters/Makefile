@@ -28,13 +28,15 @@ ML_OCAMLOPT = $(foreach opt,$(ML_OPTS), $(ALGORITHMS:=_ml_ocamlopt_$(opt).s))
 TMP  = $(C_GCC) $(C_CLANG) $(CPP_GCC) $(CPP_CLANG) $(HS_GHC) $(ML_OCAMLOPT)
 OPTS = $(addprefix _, $(TMP))
 EXES = $(OPTS:.s=)
+TESTS = $(OPTS:=-test)
 
 all: $(ASM)
 
-.PHONY: clean real-clean opts exes neut
+.PHONY: clean real-clean opts exes neut _%-test test
 
 opts: $(OPTS)
 exes: $(EXES)
+# TODO: test: $(TESTS) <- make this work
 
 neuts: opts
 	../bin/neutrality $^
@@ -61,6 +63,10 @@ _%.s:
 
 _%: _%.s
 	@../bin/omni-link $<
+
+_%-test: _%.s
+	@if [ ! -f _$* ];then ../bin/omni-link $< >/dev/null 2>/dev/null; fi;
+	@echo "$$(../bin/test.sh _$*) _$*";
 
 %.store: %.s
 	../bin/neutrality $<
