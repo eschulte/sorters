@@ -1,7 +1,7 @@
 CC=gcc
 DC=data-wrapper
 
-NEUT_COLUMNS= algorithm language compiler flag result
+NEUT_COLUMNS= algorithm language compiler flag neutral
 
 all: asms opts bin/limit
 
@@ -12,6 +12,9 @@ bin/limit: bin/limit.c
 
 results/neut-viewer: results/neut
 	$(DC) $< $(NEUT_COLUMNS)
+
+results/full-viewer: results/full
+	$(DC) $< $(NEUT_COLUMNS) size
 
 asms:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);
