@@ -16,6 +16,9 @@ results/neut-viewer: results/neut
 results/full-viewer: results/full
 	$(DC) $< $(NEUT_COLUMNS) size
 
+sorters/%:
+	$(MAKE) -C sorters/ $*;
+
 asms:
 	$(MAKE) -C sorters/ $(MAKECMDGOALS);
 

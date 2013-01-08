@@ -3,11 +3,9 @@ CP=g++
 HC=ghc
 OC=ocamlopt
 
-ALGORITHMS= \
-	bubble \
-	insertion \
-	merge \
-	quick
+ALGORITHMS= bubble insertion merge quick
+LANGUAGES= c cpp hs ml
+BASIC_EXES=$(foreach lang,$(LANGUAGES), $(ALGORITHMS:=_$(lang)))
 
 ASM  = $(ALGORITHMS:=_c.s)
 ASM += $(ALGORITHMS:=_cpp.s)
@@ -72,7 +70,7 @@ _%-test: _%.s
 	../bin/neutrality $<
 
 clean:
-	rm -f $(ASM) $(OPTS) $(EXES) *.cm* *.o *.hi
+	rm -f $(ASM) $(OPTS) $(EXES) $(BASIC_EXES) *.cm* *.o *.hi
 
 real-clean: clean
 	rm -f $(OPTS:.s=.store)
