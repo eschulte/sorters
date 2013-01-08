@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Usage: ./bin/neutral.sh [SORTER] [OPTIONS...]
+# Usage: ./bin/make-variants.sh [SORTER] [OPTIONS...]
 # Generate some number of neutral variants of SORTER using either
 # clang-mutate or cil-mutate.
 #

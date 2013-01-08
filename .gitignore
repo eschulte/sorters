@@ -24,8 +24,9 @@ coverage*
 *.cache
 repair*
 
-## archives
+## archives and results
 *.tar.bz2
+variants
 
 ## NFS
 .nfs*
