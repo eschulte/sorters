@@ -16,8 +16,12 @@ Contents
 
 Requirements
 
-  Many of the experiments laid out in src may require either the
-  genprog [1] or software evolution [2] tool suites.
+  Many of the experiments laid out in bin may require either the
+  genprog [1] or software evolution [2] tool suites.  Some of the
+  simpler experiments may only require the cil-mutate [3] or
+  clang-mutate [4] executables.
 
   [1] http://dijkstra.cs.virginia.edu/genprog/
   [2] https://github.com/eschulte/software-evolution
+  [3] https://github.com/eschulte/cil-mutate
+  [4] https://github.com/eschulte/clang-mutate
