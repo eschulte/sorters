@@ -33,13 +33,14 @@ void merge_sort (int *a, int n) {
 int main(int argc, char *argv[]) {
   int lst[NUM];
   int i, j, nextint;
+  FILE *f;
 
   if (argc < 2){
     printf("Specify the file of integers as the first argument.\n");
     return 1;
   }
 
-  FILE *f = fopen(argv[1], "r");
+  f = fopen(argv[1], "r");
   for(i=1;i<NUM && !feof(f);i++)
     if (fscanf(f, "%d", &nextint) != EOF)
       lst[i-1] = nextint;
