@@ -1,0 +1,11 @@
+#!/bin/bash
+#
+# Run the arguments multiple times and return the timing info
+#
+TIME=/usr/bin/time
+REPEATS=$1; shift;
+PROG=$1; shift;
+REST=""
+for arg in "$@";do REST+=" '$arg'";done
+
+$TIME -f "%e %M" sh -c "for arg in $REST;do for ((i=0; i<$REPEATS; i++));do $PROG \$arg; done|tail -1; done"
