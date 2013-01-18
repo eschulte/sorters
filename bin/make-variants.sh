@@ -5,9 +5,10 @@
 # clang-mutate or cil-mutate.
 #
 # Options:
-#   -e --engine [clang|cil] .. use the (clang|cil)-mutate executable
-#   -n --number [#] .......... the number of variants to generate
-#   -r --result-dir [dir] .... specify where to save the results
+#   -e --engine [clang|cil] ..... use the (clang|cil)-mutate executable
+#   -n --number [#] ............. the number of variants to generate
+#   -r --result-dir [dir] ....... specify where to save the results
+#   -t --test [test|test-file] .. test script to use
 #   
 HOME=$(pwd)
 SORTER="$1"; shift;
@@ -21,7 +22,8 @@ NAME=$(basename "$SORTER" ".$EXT")
 ENGINE=cil-mutate
 NUMBER=100
 DIR=variants
-eval set -- $(getopt -o e:n: -l engine:number: -- "$@")
+TEST_SCRIPT="test.sh"
+eval set -- $(getopt -o e:n:r:t: -l engine:,number:,result-dir:,test: -- "$@")
 while [ $# -gt 0 ];do
     case $1 in
         -e|--engine)
@@ -31,6 +33,12 @@ while [ $# -gt 0 ];do
             fi;;
         -n|--number) NUMBER="$2"; shift;;
         -d|--result-dir) DIR="$2"; shift;;
+        -t|--test)
+            case $2 in
+                test) TEST_SCRIPT="test.sh";;
+                test-file) TEST_SCRIPT="test-file.sh";;
+                (*) echo "$0: bad test file '$2'"; exit 1;;
+            esac; shift;;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -63,18 +71,22 @@ fitness(){
     local SRC="$1";
     local EXE=$(basename $1 ".$EXT");
     make $EXE >/dev/null
-    FITNESS=$(./limit ./test.sh $EXE)
+    FITNESS=$(./limit ./$TEST_SCRIPT $EXE)
     if [ $? -eq 0 ]; then echo $FITNESS;else echo 0;fi; }
 
 # Make and populate the temp directory
 TMPDIR=$(mktemp -d)
 function exit_hook (){ rm -rf $TMPDIR; exit 0; }
 trap exit_hook EXIT
-cp $SORTER $TMPDIR
+case $ENGINE in
+    # cil requires pre-processing of macros from C files
+    cil-mutate) cpp $SORTER > $TMPDIR/$NAME.$EXT;;
+    clang-mutate) cp $SORTER $TMPDIR;;
+esac
 cp sorters/Makefile $TMPDIR
 make bin/limit
 cp bin/limit $TMPDIR
-cp bin/test.sh $TMPDIR
+cp bin/$TEST_SCRIPT $TMPDIR
 pushd $TMPDIR>/dev/null
 SORTER=$(basename $SORTER)
 
