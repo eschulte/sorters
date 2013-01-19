@@ -70,7 +70,7 @@ _%-test: _%.s
 	../bin/neutrality $<
 
 clean:
-	rm -f $(ASM) $(OPTS) $(EXES) $(BASIC_EXES) *.cm* *.o *.hi
+	rm -f $(ASM) $(OPTS) $(EXES) $(BASIC_EXES) *.cm* *.o *.hi merge_file_c
 
 real-clean: clean
 	rm -f $(OPTS:.s=.store)

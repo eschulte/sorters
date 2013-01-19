@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NUM 100
+#define NUM 1000002
 
 void merge (int *a, int *b, int n) {
   int i, *x, *p, *q;
@@ -47,8 +47,7 @@ int main(int argc, char *argv[]) {
 
   merge_sort(lst, i-2);
   for(j=1;j<i-1;j++)
-    printf("%d ", lst[j-1]);
-  printf("\n");
+    printf("%d\n", lst[j-1]);
 
   fclose(f);
   return 0;
