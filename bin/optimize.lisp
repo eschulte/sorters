@@ -9,13 +9,10 @@
 (defvar *fitness-predicate* #'<
   "Descending order because we want to minimize run time.")
 
-(defvar *test* "../../bin/profile"
+(defvar *test* "../../bin/large-test.sh"
   "The standard sorter test script.")
 
-(defvar *reps* 100
-  "Number of repetitions of the sorting test suite used in profiling.")
-
-(defvar *orig* (from-file (make-instance 'cil) "sorters/merge_c.c")
+(defvar *orig* (from-file (make-instance 'cil) "sorters/merge_file_c.c")
   "The original program.")
 
 (defvar *work-dir* "sh-runner/work/"
@@ -23,11 +20,13 @@
 
 (setf *max-population-size* 256)
 
+(setf *tournament-size* 4)
+
 (defmethod evaluate ((variant cil))
   (with-temp-file (file)
     (phenome variant :bin file)
     (multiple-value-bind (stdout stderr exit)
-        (shell "~a ~a ~a 2>&1" *test* *reps* file)
+        (shell "~a ~a 2>&1" *test* file)
       (declare (ignorable stderr))
       (or (ignore-errors
             (when (zerop exit)
@@ -52,4 +51,14 @@
                             (store
                              *population*
                              (format nil "pops/~d.store" *fitness-evals*)))))
-   :name "opt"))
+   :name "opt")
+  (loop :for i :upto 24 :do
+     (sb-thread:make-thread
+      (lambda ()
+        (evolve #'test
+                :period 512
+                :period-func (lambda ()
+                               (store
+                                *population*
+                                (format nil "pops/~d.store" *fitness-evals*)))))
+      :name (format nil "opt-~d" i))))
