@@ -1,7 +1,8 @@
 (in-package :software-evolution)
-(use-package :curry-and-compose-reader-macros)
+(use-package :cl-ppcre)
+(use-package :curry-compose-reader-macros)
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (enable-curry-and-compose-reader-macros))
+  (enable-curry-compose-reader-macros))
 
 (defvar infinity
   #+sbcl
@@ -25,6 +26,11 @@
 
 (setf *tournament-size* 4)
 
+(defun parse-number (string)
+  (let ((number-str (scan-to-strings "^([0-9/]+|[0-9.]+)[^./]" string)))
+    (assert number-str (string) "String ~S doesn't specify a number." string)
+    (read-from-string number-str)))
+
 (defmethod evaluate ((variant asm))
   (with-temp-file (file)
     (or (ignore-errors
@@ -32,9 +38,7 @@
           (multiple-value-bind (stdout stderr exit)
               (shell "~a ~a 2>&1" *test* file)
             (declare (ignorable stderr))
-            (when (zerop exit)
-              (with-input-from-string (in stdout)
-                (read in nil nil)))))
+            (when (zerop exit) (parse-number stdout))))
         infinity)))
 
 (defun test (variant)
