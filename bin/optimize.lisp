@@ -27,15 +27,15 @@
 
 (defmethod evaluate ((variant asm))
   (with-temp-file (file)
-    (phenome variant :bin file)
-    (multiple-value-bind (stdout stderr exit)
-        (shell "~a ~a 2>&1" *test* file)
-      (declare (ignorable stderr))
-      (or (ignore-errors
+    (or (ignore-errors
+          (phenome variant :bin file)
+          (multiple-value-bind (stdout stderr exit)
+              (shell "~a ~a 2>&1" *test* file)
+            (declare (ignorable stderr))
             (when (zerop exit)
               (with-input-from-string (in stdout)
-                (read in nil nil))))
-          infinity))))
+                (read in nil nil)))))
+        infinity)))
 
 (defun test (variant)
   (incf *fitness-evals*)
