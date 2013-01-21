@@ -1,4 +1,7 @@
 (in-package :software-evolution)
+(use-package :curry-and-compose-reader-macros)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-and-compose-reader-macros))
 
 (defvar infinity
   #+sbcl
@@ -12,7 +15,7 @@
 (defvar *test* "../../bin/large-test.sh"
   "The standard sorter test script.")
 
-(defvar *orig* (from-file (make-instance 'cil) "sorters/merge_file_c.c")
+(defvar *orig* (from-file (make-instance 'asm) "sorters/merge_file_c.s")
   "The original program.")
 
 (defvar *work-dir* "sh-runner/work/"
@@ -22,7 +25,7 @@
 
 (setf *tournament-size* 4)
 
-(defmethod evaluate ((variant cil))
+(defmethod evaluate ((variant asm))
   (with-temp-file (file)
     (phenome variant :bin file)
     (multiple-value-bind (stdout stderr exit)
@@ -37,6 +40,8 @@
 (defun test (variant)
   (incf *fitness-evals*)
   (evaluate variant))
+
+(memoize #'test :key [#'genome #'first])
 
 ;; Run -- this will just run forever
 #+run
