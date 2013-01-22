@@ -52,20 +52,11 @@
 (progn
   (setf (fitness *orig*) (test *orig*))
   (setf *population* (repeatedly *max-population-size* (copy *orig*)))
-  (sb-thread:make-thread
-   (lambda ()
-     (evolve #'test
-             :period 512
-             :period-func (lambda ()
-                            (store
-                             *population*
-                             (format nil "pops/~d.store" *fitness-evals*)))))
-   :name "opt")
-  (loop :for i :upto 24 :do
+  (loop :for i :upto 48 :do
      (sb-thread:make-thread
       (lambda ()
         (evolve #'test
-                :period 512
+                :period 8192
                 :period-func (lambda ()
                                (store
                                 *population*
