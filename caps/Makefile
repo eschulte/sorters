@@ -2,13 +2,14 @@ CC := gcc
 HC := ghc
 OC := ocamlopt
 
-all: check
-
 %: %.c
 	${CC} -Ofast -o $@ $<  -lpthread
 
 %: %.hs
 	${HC} -O4 -o $@ $<
+
+%.s: %.c
+	$(CC) -o $@ -S $<
 
 caps-ml: caps.ml
 	${OC} -linkall -nodynlink -o $@ $<
