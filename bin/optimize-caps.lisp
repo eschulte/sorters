@@ -22,9 +22,9 @@
 (defvar *work-dir* "sh-runner/work/"
   "Needed because SBCL chokes after too many shell outs.")
 
-(setf *max-population-size* 256)
+(setf *max-population-size* 128)
 
-(setf *tournament-size* 4)
+(setf *tournament-size* 2)
 
 (defun parse-number (string)
   (let ((number-str (scan-to-strings "^([0-9/]+|[0-9.]+)[^./]" string)))
