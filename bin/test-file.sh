@@ -19,7 +19,7 @@ if [ -z $3 ];then limit=$(dirname $0)"/limit";
              else limit="$3"; fi
 
 run_helper(){
-    diff <($limit $prog <(echo $1)|sed 's/ *$//') <(echo $2) >/dev/null 2>/dev/null; }
+    diff <($limit $prog <(echo $1)) <(echo $2|tr ' ' '\n') >/dev/null 2>/dev/null; }
 
 run(){
     case $1 in

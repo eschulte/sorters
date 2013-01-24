@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NUM 1000002
+#define NUM 100
 
 void merge (int *a, int *b, int n) {
   int i, *x, *p, *q;

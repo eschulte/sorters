@@ -1,51 +1,49 @@
 ;;; neutral.lisp --- test sorters for neutrality across representations
-(load "~/.sbclrc" :if-does-not-exist nil)
-(require 'software-evolution)
+(require :software-evolution)
+(require :curry-compose-reader-macros)
 (in-package :software-evolution)
+(use-package :curry-compose-reader-macros)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-compose-reader-macros))
 
-(advise-thread-pool-size 40)
+(defvar *fitness-predicate* #'<
+  "Descending order because we want to minimize run time.")
 
-(defvar *num-tests* 10)
+(defvar *test* "../../bin/test-file.sh"
+  "The standard sorter test script.")
 
-(defvar *test* "test.sh")
+(defvar *orig* (from-file (make-instance 'cil) "sorters/merge_file_c.c")
+  "The original program.")
 
-(defun run-test (phenome num)
-  (multiple-value-bind (output err-output exit)
-      (shell "~a ~a ~a" *test* phenome num)
-    (declare (ignorable output err-output))
-    (zerop exit)))
+(defvar *work-dir* "sh-runner/work/"
+  "Needed because SBCL chokes after too many shell outs.")
 
-(def-memoized-function test-suite (ast)
-  (with-temp-file (bin)
-    (if (phenome ast :bin bin)
-        (count t (loop :for num :below *num-tests* :collect (run-test bin num)))
-        0)))
+(defmethod neutralp ((variant cil))
+  (with-temp-file (file)
+    (ignore-errors
+      (phenome variant :bin file)
+      (format t "~a ~a" *test* file)
+      (multiple-value-bind (stdout stderr exit) (shell "~a ~a" *test* file)
+        (declare (ignorable stderr stdout))
+        (zerop exit)))))
 
-(defun neutrality (path &key (runs 1000) linker)
-  "Test the neutrality of the assembly program at PATH."
-  (let* ((pathname (pathname path))
-         (orig (from-file (make-instance 'asm
-                            :linker linker)
-                          pathname))
-         (store (make-pathname
-                 :directory (pathname-directory pathname)
-                 :name (pathname-name pathname)
-                 :type "store")))
-    (cond
-      ((not (= *num-tests* (test-suite orig))) ;; sanity
-       (format t "Sanity check failed: ~a~%" path))
-      ((probe-file store) ;; don't overwrite existing results
-       (format t "Store file exists: ~a~%" store))
-      (t ;; run
-       (format t "~&~a ~S~%"
-               path
-               (/ (count-if (lambda (it) (= (fitness it) *num-tests*))
-                            (store (repeatedly runs
-                                     (let ((new (mutate (copy orig))))
-                                       (setf (fitness new) (test-suite new))
-                                       (make-instance 'asm
-                                         :fitness (fitness new)
-                                         :edits (edits new))))
-                                   store))
-                  runs))))
-    store))
+(defun test (variant)
+  (incf *fitness-evals*) (neutralp variant))
+(un-memoize 'test)
+(memoize #'test :key [#'genome #'first])
+
+(defun save-pop (ind-format)
+  (loop :for individual :in *population* :as i :upfrom 0 :do
+     (string-to-file (genome individual) (format nil ind-format i))))
+
+(defun neutral-walk (neutralp &key (pop-size 100) (max-steps 256) &aux next)
+  "Generate successive neutral generations of *POPULATION*.
+The function NEUTRALP should take a variant and test its neutrality."
+  (loop :for step :below max-steps :do
+     (loop :for new = (let ((it (copy (random-elt *population*))))
+                        (mutate it) it) :until (= (length next) pop-size) :do
+        (format t "~S -> ~S~%"
+                (edits new) (when (funcall neutralp new)
+                              (setf (fitness new) 1) (push new next) 1)))
+     (setf *population* next) (setf next nil)
+     (save-pop (format nil "steps/~d/ind-~~d.c" step))))

@@ -26,11 +26,6 @@
 
 (setf *tournament-size* 4)
 
-(defun parse-number (string)
-  (let ((number-str (scan-to-strings "^([0-9/]+|[0-9.]+)[^./]" string)))
-    (assert number-str (string) "String ~S doesn't specify a number." string)
-    (read-from-string number-str)))
-
 (defmethod evaluate ((variant asm))
   (with-temp-file (file)
     (or (ignore-errors
