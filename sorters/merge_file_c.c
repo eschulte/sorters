@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define NUM 100
+#include "sorters.h"
 
 void merge (int *a, int *b, int n) {
   int i, *x, *p, *q;
@@ -32,23 +31,11 @@ void merge_sort (int *a, int n) {
 
 int main(int argc, char *argv[]) {
   int lst[NUM];
-  int i, j, nextint;
-  FILE *f;
+  int i, length;
+  length = file_to_int_list(argv[1], lst);
 
-  if (argc < 2){
-    printf("Specify the file of integers as the first argument.\n");
-    return 1;
-  }
+  merge_sort(lst, length);
+  for(i=0;i<length;i++) printf("%d\n", lst[i]);
 
-  f = fopen(argv[1], "r");
-  for(i=1;i<NUM && !feof(f);i++)
-    if (fscanf(f, "%d", &nextint) != EOF)
-      lst[i-1] = nextint;
-
-  merge_sort(lst, i-2);
-  for(j=1;j<i-1;j++)
-    printf("%d\n", lst[j-1]);
-
-  fclose(f);
   return 0;
 }
