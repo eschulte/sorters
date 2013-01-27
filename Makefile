@@ -1,7 +1,7 @@
-CC=gcc
-DC=data-wrapper
-SORT_SIZE=1000000
-CAPS_SIZE=100000
+CC:=gcc
+DC:=data-wrapper
+SORT_SIZE:=1000000
+CAPS_SIZE:=100000
 
 NEUT_COLUMNS= algorithm language compiler flag neutral
 
