@@ -32,7 +32,7 @@ while [ $# -gt 0 ];do
                 echo "$0: engine $ENGINE not installed"; exit 1
             fi;;
         -n|--number) NUMBER="$2"; shift;;
-        -d|--result-dir) DIR="$2"; shift;;
+        -r|--result-dir) DIR="$2"; shift;;
         -t|--test)
             case $2 in
                 test) TEST_SCRIPT="test.sh";;

@@ -23,7 +23,7 @@ ENGINE=cil-mutate
 NUMBER=10
 DIR=variants
 TEST_SCRIPT="test.sh"
-eval set -- $(getopt -o e:n:r:t:s: -l engine:,number:,result-dir:,test:,steps: -- "$@")
+eval set -- $(getopt -o e:n:r:t:s: -l engine:,number:,result-dir:,test:,steps: -- "$@" || exit 1)
 while [ $# -gt 0 ];do
     case $1 in
         -e|--engine)
@@ -33,7 +33,7 @@ while [ $# -gt 0 ];do
             fi;;
         -n|--number) NUMBER="$2"; shift;;
         -s|--steps) STEPS="$2"; shift;;
-        -d|--result-dir) DIR="$2"; shift;;
+        -r|--result-dir) DIR="$2"; shift;;
         -t|--test)
             case $2 in
                 test) TEST_SCRIPT="test.sh";;
@@ -41,7 +41,7 @@ while [ $# -gt 0 ];do
                 (*) echo "$0: bad test file '$2'"; exit 1;;
             esac; shift;;
         (--) shift; break;;
-        (-*) error "unrecognized option $1";;
+        (-*) echo "unrecognized option $1">&2; exit 1;;
         (*)  break;;
     esac
     shift
@@ -78,28 +78,31 @@ fitness(){
     local EXE=$(basename $1 ".$EXT");
     make $EXE >/dev/null
     FITNESS=$(./limit ./$TEST_SCRIPT $EXE)
-    if [ $? -eq 0 ]; then echo $FITNESS;else echo 0;fi; }
+    RES=$?
+    rm $EXE
+    if [ $RES -eq 0 ]; then echo $FITNESS;else echo 0;fi; }
 
 # Make and populate the temp directory
 TMPDIR=$(mktemp -d)
 function exit_hook (){ rm -rf $TMPDIR; exit 0; }
 trap exit_hook EXIT
 cp sorters/Makefile $TMPDIR
+cp sorters/sorters.h /tmp/
 make bin/limit
 cp bin/limit $TMPDIR
 cp bin/$TEST_SCRIPT $TMPDIR
-mkdir -p $TMPDIR/tmp/0
-cp $SORTER $TMPDIR/tmp/0/
+mkdir -p $TMPDIR/tmp/0/neut
+cat $SORTER|sed 's/sorters.h/\/tmp\/sorters.h/' > $TMPDIR/tmp/0/neut/$(basename $SORTER)
 pushd $TMPDIR>/dev/null
 
 # Generate the neutral variants
 for ((s=1;s<=$STEPS;s++));do
     echo -n "starting step $s "
-    mkdir tmp/$s
+    mkdir -p tmp/$s/neut
     COUNTER=0
     for ((;;));do
         # randomly pick an individual
-        SORTER="tmp/$(($s - 1))/$(random_from tmp/$(($s - 1)))"
+        SORTER="tmp/$(($s - 1))/neut/$(random_from tmp/$(($s - 1))/neut)"
         EXT=$(echo "$SORTER"|sed 's/^.*\.//')
         NAME=$(basename "$SORTER" ".$EXT")
         case $ENGINE in
@@ -126,16 +129,18 @@ for ((s=1;s<=$STEPS;s++));do
                 OUTPUT="${NAME}_swp_${ID1}_${ID2}.${EXT}"
                 $(run swp $ID1 $ID2 $SORTER $OUTPUT);;
         esac
-        if [ $(fitness $OUTPUT 2>/dev/null) -eq 10 ];then
+        FIT=$(fitness $OUTPUT 2>/dev/null)
+        echo "$FIT $OUTPUT" >> $TMPDIR/tmp/fitness
+        if [ $FIT -eq 10 ];then
             echo -n "."
-            mv $OUTPUT tmp/$s/
             COUNTER=$(($COUNTER + 1))
             if [ $COUNTER -eq $NUMBER ];then
                 echo ""
                 break;
             fi
+            mv $OUTPUT tmp/$s/neut
         else
-            rm $OUTPUT
+            mv $OUTPUT tmp/$s
         fi
         rm $SORTER
     done
