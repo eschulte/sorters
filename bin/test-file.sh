@@ -41,7 +41,7 @@ if [ -z "$2" ];then
         if $(run $i);then count=$(expr $count + 1);fi
     done
     echo "$count"
-    if [ $count -eq 10 ];then exit 0;fi
+    exit 0
 else
     if $(run $2);then exit 0;fi
 fi
