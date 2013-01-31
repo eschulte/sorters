@@ -20,6 +20,5 @@ int main(int argc, char *argv[]) {
   alarm(4);                           // wall clock seconds
 
   // run
-  execvp(argv[1], &argv[1]);
-  return 0;
+  return execvp(argv[1], &argv[1]);
 }
