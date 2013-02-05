@@ -19,7 +19,7 @@ void sort(int a[], int size)
 }
 
 int main(int argc, char *argv[]) {
-  int lst[argc-1];
+  int lst[NUM];
   int i, length;
   length = file_to_int_list(argv[1], lst);
 
