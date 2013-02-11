@@ -57,7 +57,8 @@ num_diff(){ # diff of numerical closeness
     paste $1 $2|awk "$AWK_CMD"; }
 
 run(){ # return the difference between oracle and program output
-    num_diff <($LIMIT $PROG <(echo "${INPUTS[$1]}")) <(echo "${OUTPUTS[$1]}"); }
+    # $LIMIT $PROG 2 <(echo "${INPUTS[$1]}") /dev/stdout|egrep "^[[:digit:]]" >&2
+    num_diff <($LIMIT $PROG 2 <(echo "${INPUTS[$1]}") /dev/stdout|egrep "^[[:digit:]]") <(echo "${OUTPUTS[$1]}"); }
 
 INPUTS[0]="1
 42.00 40.00 0.1000 0.00 0.20 0.50 C 0.00 4.759423036851750055"
