@@ -48,4 +48,16 @@
 
 (prog1 :done (setf *summary* (restore "results/merge-pops-2013-01-28.store")))
 
-(format t "~{~a~^ ~}~%" '(1 2 3 4 5))
+(length *summary*)
+
+(mapcar #'car (car *summary*))
+;; (:EVALS :NUM-NEUT :MEAN-FIT :BEST-FIT :BEST-EDITS)
+
+(with-open-file (out "/tmp/merge-pops-2013-01-28.summary" :direction :output)
+  (mapc
+   (lambda (it)
+     (format out "~{~a~^ ~}~%"
+             (mapcar {aget _ it}
+                     '(:EVALS :NUM-NEUT :MEAN-FIT :BEST-FIT))))
+   *summary*)
+  :done)
