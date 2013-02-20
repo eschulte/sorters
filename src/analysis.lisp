@@ -26,18 +26,26 @@
   #-(or sbcl)
   (error "must specify a positive infinity value"))
 
+#+real
 (advise-thread-pool-size 48)
 
 (defvar *files* (cl-fad:list-directory "results/merge-pops-2013-01-28"))
 
-(defvar *summary*
-  (pmapcar (lambda (path)
-             (let* ((pop (restore path))
-                    (neutral (remove infinity pop :key #'fitness))
-                    (sorted (sort neutral #'< :key #'fitness)))
-               `((:evals      . ,(parse-integer (pathname-name path)))
-                 (:num-neut   . ,(length neutral))
-                 (:mean-fit   . ,(mean (mapcar #'fitness neutral)))
-                 (:best-fit   . ,(fitness (car sorted)))
-                 (:best-edits . ,(edits (car sorted))))))
-           *files*))
+(defvar *summary* nil)
+
+#+first-time
+(setf *summary*
+      (pmapcar (lambda (path)
+                 (let* ((pop (restore path))
+                        (neutral (remove infinity pop :key #'fitness))
+                        (sorted (sort neutral #'< :key #'fitness)))
+                   `((:evals      . ,(parse-integer (pathname-name path)))
+                     (:num-neut   . ,(length neutral))
+                     (:mean-fit   . ,(mean (mapcar #'fitness neutral)))
+                     (:best-fit   . ,(fitness (car sorted)))
+                     (:best-edits . ,(edits (car sorted))))))
+               *files*))
+
+(prog1 :done (setf *summary* (restore "results/merge-pops-2013-01-28.store")))
+
+(format t "~{~a~^ ~}~%" '(1 2 3 4 5))
