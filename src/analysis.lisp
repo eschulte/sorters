@@ -16,3 +16,28 @@
 (defvar *stats* (with-open-file (in "pop-fitness")
                   (loop :for line = (read-line in nil nil) :while line
                      :collect (stats-at-fit (parse-integer line)))))
+
+;;; Summary of a *massive* run on real
+(require :cl-fad)
+
+(defvar infinity
+  #+sbcl
+  SB-EXT:DOUBLE-FLOAT-POSITIVE-INFINITY
+  #-(or sbcl)
+  (error "must specify a positive infinity value"))
+
+(advise-thread-pool-size 48)
+
+(defvar *files* (cl-fad:list-directory "results/merge-pops-2013-01-28"))
+
+(defvar *summary*
+  (pmapcar (lambda (path)
+             (let* ((pop (restore path))
+                    (neutral (remove infinity pop :key #'fitness))
+                    (sorted (sort neutral #'< :key #'fitness)))
+               `((:evals      . ,(parse-integer (pathname-name path)))
+                 (:num-neut   . ,(length neutral))
+                 (:mean-fit   . ,(mean (mapcar #'fitness neutral)))
+                 (:best-fit   . ,(fitness (car sorted)))
+                 (:best-edits . ,(edits (car sorted))))))
+           *files*))
