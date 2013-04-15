@@ -6,6 +6,7 @@ best
 merge-broke
 merge
 a.out
+**.fasl
 
 ## execution traces
 src/*.path
