@@ -48,7 +48,7 @@
                       (list *fitness-evals*
                             (if (null multi) 0 (mean multi))
                             (if (null edits) 0 (mean edits)))))))
-  (when (mod *checkpoint-counter* 8)
+  (when (zerop (mod *checkpoint-counter* 16))
     ;; individual metrics
     (with-open-file (out (format nil "~a/ind.stats" *base*)
                          :direction :output
