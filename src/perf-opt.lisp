@@ -16,6 +16,9 @@
 
 (defvar *test-fmt* nil "Script used to evaluate variants.")
 
+(defvar *evaluations* nil
+  "Large list of all evaluations and their results.")
+
 (defvar infinity
   #+sbcl
   SB-EXT:DOUBLE-FLOAT-POSITIVE-INFINITY
