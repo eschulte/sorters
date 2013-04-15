@@ -6,10 +6,12 @@
 # OPTIONS:
 #   -t,--test --- the specific test to run (otherwise print # passed)
 #   -p,--perf --- return profiling information
+#   -e,--events - list of perf events
 #
 BASE="$(dirname $0)"
 TEST=""
 PERF=""
+EVENTS="cycles,instructions,cache-references,page-faults,branches,branch-misses,task-clock"
 PERF_FILE=$(mktemp)
 if [ -z "$LIMIT" ];then LIMIT="${BASE}/limit"; fi
 declare -a INPUTS
@@ -42,7 +44,7 @@ run_prog(){
     if [ -z "$PERF" ];then
         $LIMIT $PROG $1
     else
-        $LIMIT perf stat -x, --append -o $PERF_FILE $PROG $1
+        $LIMIT perf stat -x, -e "$EVENTS" --append -o $PERF_FILE $PROG $1
     fi; }
 
 num_diff(){ # difference between two lists
