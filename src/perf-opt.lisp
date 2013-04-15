@@ -19,6 +19,9 @@
 (defvar *evaluations* nil
   "Large list of all evaluations and their results.")
 
+(defvar *checkpoint-counter* 0
+  "Counter for periodic checkpoint events.")
+
 (defvar infinity
   #+sbcl
   SB-EXT:DOUBLE-FLOAT-POSITIVE-INFINITY

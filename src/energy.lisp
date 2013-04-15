@@ -36,13 +36,6 @@
 
 (defun checkpoint ()
   (sb-ext:gc :force t)
-  ;; individual metrics
-  (with-open-file (out (format nil "~a/ind.stats" *base*)
-                       :direction :output
-                       :if-exists :append
-                       :if-does-not-exist :create)
-    (format out "~&~S~%" *evaluations*))
-  (setf *evaluations* nil)
   ;; population metrics
   (let ((multi (mapcar #'fitness *population*))
         (edits (mapcar [#'count-cons #'edits] *population*)))
@@ -55,8 +48,16 @@
                       (list *fitness-evals*
                             (if (null multi) 0 (mean multi))
                             (if (null edits) 0 (mean edits)))))))
-  (store (extremum *population* *fitness-predicate* :key #'fitness)
-         (format nil "~a/~d.store" *base* *fitness-evals*)))
+  (when (mod *checkpoint-counter* 8)
+    ;; individual metrics
+    (with-open-file (out (format nil "~a/ind.stats" *base*)
+                         :direction :output
+                         :if-exists :append
+                         :if-does-not-exist :create)
+      (format out "~&~{~S~^~%~}~%" *evaluations*))
+    (setf *evaluations* nil)
+    (store *population* (format nil "~a/~d.store" *base* *fitness-evals*)))
+  (incf *checkpoint-counter*))
 
 
 #+run
