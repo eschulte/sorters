@@ -43,10 +43,10 @@ run_prog(){
         $LIMIT $PROG $1
     else
         $LIMIT perf stat -x, --append -o $PERF_FILE $PROG $1
-    fi|sed 's/ *$//'; }
+    fi; }
 
 num_diff(){ # difference between two lists
-    diff <(run_prog "$1"|tr ' ' '\n') <(echo "$2"|tr ' ' '\n')|wc -l;}
+    diff -wB <(run_prog "$1"|tr ' ' '\n') <(echo "$2"|tr ' ' '\n')|wc -l; }
 
 run(){
     if [ $1 -gt 9 ];then
