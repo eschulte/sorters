@@ -52,7 +52,12 @@ num_diff(){ # difference between two lists
 
 run(){
     if [ $1 -gt 9 ];then
-        num_diff "$(cat "$BASE/$1.in")" "$(cat "$BASE/$1.out")"
+        if [ -f "$BASE/$1.in" ] && [ -f "$BASE/$1.out" ];then
+            num_diff "$(cat "$BASE/$1.in")" "$(cat "$BASE/$1.out")"
+        else
+            echo "test '$BASE/$1.[in|out]' not found" >&2
+            exit 1
+        fi
     else
         num_diff "$(echo "${INPUTS[$1]}")" "$(echo "${OUTPUTS[$1]}")"
     fi; }
