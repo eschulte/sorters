@@ -14,6 +14,8 @@
 (defclass cil-perf (cil)
   ((stats :initarg :stats :accessor stats :initform nil)))
 
+(defvar *test-fmt* nil "Script used to evaluate variants.")
+
 (defvar infinity
   #+sbcl
   SB-EXT:DOUBLE-FLOAT-POSITIVE-INFINITY
