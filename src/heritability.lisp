@@ -36,28 +36,55 @@
 (store *sires* (format nil "~a/sires.store" *base*))
 
 ;; for each sire generate 100 neutral offspring
+;; slow enough we should use a bunch of threads
+(require :eager-future2)(use-package :eager-future2)
+(advise-thread-pool-size 48)
+(defun pmapcar (f list)
+  "Parallel map (from http://marijnhaverbeke.nl/pcall/)."
+  (let ((result (mapcar (lambda (n) (pexec (funcall f n))) list)))
+    (map-into result #'yield result)))
+
 (defvar *offspring*
-  (loop :for sire :in *sires* :collect
-     (let (neutral)
-       (loop :until (= (length neutral) 100) :do
-          (let* ((new (copy sire))
-                 (stats (progn (mutate new) (test new))))
-            (when (and (zerop (aget :exit stats))
-                       (zerop (aget :error stats)))
-              (push stats neutral))))
-       neutral)))
+  (pmapcar (lambda (sire)
+             (let (neutral)
+               (loop :until (= (length neutral) 100) :do
+                  (let* ((new (copy sire))
+                         (stats (progn (mutate new) (test new))))
+                    (when (ignore-errors (and (zerop (aget :exit stats))
+                                              (zerop (aget :error stats))))
+                      (push stats neutral))))
+               (cons sire neutral)))
+           *sires*))
 (store *offspring* (format nil "~a/offspring.store" *base*))
 
-;; calculate V_{G} for each pair of traits
-(defvar *combined-traits*
-  (loop :for s-trait :in *traits* :collect
-     (loop :for o-trait :in *traits* :collect
-        (list s-trait o-trait
-              (mapcar
-               (lambda (sire offspring)
-                 (mapcar [{cons (aget s-trait (stats sire))} {aget o-trait}]
-                         offspring))
-               *sires* *offspring*)))))
+(defvar *stats*
+  (apply #'append
+         (mapcar (lambda-bind ((sire . offspring))
+                   (mapcar {cons (cons :sire (stats sire))} offspring))
+                 *offspring*)))
+
+;; calculate the matrix of genetic correlations
+(defun covariance (a b)
+  (/ (reduce #'+ (mapcar #'*
+                         (mapcar {- _ (mean a)} a)
+                         (mapcar {- _ (mean b)} b)))
+     (- (length a) 1)))
+
+(defun correlation (a b)
+  (/ (covariance a b)
+     (sqrt (* (variance a) (variance b)))))
+
+(defun relation (sire-trait offspring-trait)
+  (correlation (mapcar [{aget sire-trait} {aget :sire}] *stats*)
+               (mapcar {aget offspring-trait} *stats*)))
+
+(loop :for row :in *traits* :collect
+             (loop :for col :in *traits* :collect
+                (relation row col)))
+;; => not quite right
+;; ((0.702695 0.6535714 0.6414558 0.05302034)
+;;  (0.7050594 0.6557561 0.64346075 0.052906547)
+;;  (0.70497364 0.65567297 0.6433836 0.05301587)
+;;  (0.70511377 0.65569395 0.6433856 0.05255836))
 
 ;; calculate Delta-Z given matrix G and *beta*
-
