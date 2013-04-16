@@ -88,3 +88,20 @@
 ;;  (0.70511377 0.65569395 0.6433856 0.05255836))
 
 ;; calculate Delta-Z given matrix G and *beta*
+(defvar *G* '((0.702695 0.6535714 0.6414558 0.05302034)
+              (0.7050594 0.6557561 0.64346075 0.052906547)
+              (0.70497364 0.65567297 0.6433836 0.05301587)
+              (0.70511377 0.65569395 0.6433856 0.05255836)))
+
+(defvar *B* (mapcar [#'list #'cdr] *energy-model*))
+
+(defun matrix-multiply (matrix1 matrix2)
+  (mapcar
+   (lambda (row)
+     (apply #'mapcar
+            (lambda (&rest column)
+              (apply #'+ (mapcar #'* row column)))
+            matrix2))
+   matrix1))
+
+(matrix-multiply *B* *G*)
