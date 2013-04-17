@@ -46,6 +46,7 @@
       (format out "~&~{~a~^ ~}~%"
               (mapcar #'float
                       (list *fitness-evals*
+                            ;; start saving min, median *and* mean for pop stats
                             (if (null multi) 0 (mean multi))
                             (if (null edits) 0 (mean edits)))))))
   (when (zerop (mod *checkpoint-counter* 16))
