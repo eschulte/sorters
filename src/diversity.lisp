@@ -84,3 +84,45 @@
                               (format nil "~a/~d.store"
                                       *base* *fitness-evals*))))
 )
+
+
+;;; Analysis
+(defun collect (list &key (test #'eql) (key #'identity))
+  (reduce (lambda (groups ind)
+            (if (assoc (funcall key ind) groups :key key :test test)
+                (push ind (cdr (assoc (funcall key ind) groups
+                                      :key key :test test)))
+                (push (list ind) groups))
+            groups)
+          list :initial-value nil))
+
+(defun counts
+    (list &key (test #'eql) (key #'identity) (label #'car) (accum #'length))
+  (mapcar (lambda (grp) (cons (funcall label grp) (funcall accum grp)))
+          (collect list :key key :test test)))
+
+(defvar *pop*
+  (mapcar (lambda (ind)
+            (list (initial-cmp ind) (initial-flg ind)
+                  (counts (mapcar {aget :flag} (genome ind)))
+                  (counts (mapcar {aget :cmp} (genome ind)))))
+          *population*))
+
+(setf *pop* (restore "results/diversity/makeup.store"))
+
+(car *pop*) ;; => (:CLANG O3 ((O2 . 173) (O3 . 186)) ((:CLANG . 359)))
+
+(counts (mapcar [#'length #'fourth] ))
+;; => 0.3685865
+
+(counts
+ (apply #'append (mapcar #'fourth (remove-if-not [{equal :clang} #'car] *pop*)))
+ :key #'car :label #'caar :accum [{reduce #'+} {mapcar #'cdr}])
+;; => ((:GCC . 14398) (:CLANG . 3865527))
+
+(counts
+ (apply #'append (mapcar #'third (remove-if-not [{eq 'O1} #'second] *pop*)))
+ :key #'car :label #'caar :accum [{reduce #'+} {mapcar #'cdr}])
+;; =>
+;; ((O0 . 911) (OZ . 3756) (O1 . 8099) (OS . 2721) (O3 . 283846) (O2 . 270389)
+;;  (OFAST . 60))
