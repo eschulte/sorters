@@ -1,7 +1,7 @@
 (load "src/perf-opt.lisp")
 (in-package :perf-opt)
 
-(setf *test-fmt* "./bin/test.sh ~a")
+(setf *test-fmt* "../../bin/test.sh ~a")
 
 (defvar *base* "results/diversity" "Place to hold results.")
 
@@ -69,13 +69,18 @@
  *origs* (remove-if-not [{= 10} #'fitness]
                         (mapc (lambda (orig) (setf (fitness orig) (evaluate orig)))
                               *origs*))
- *max-population-size* (expt 2 9)
+ *max-population-size* (* 12 (expt 2 10))
  *tournament-size* 2
  *fitness-predicate* #'>
  *cross-chance* 3/5
  *population* (loop :for n :below *max-population-size* :by (length *origs*)
                  :append (mapcar #'copy *origs*)))
 
-(evolve #'evaluate :max-evals (expt 2 18))
-
+(evolve #'evaluate
+        :max-evals (expt 2 20)
+        :period (expt 2 17)
+        :peropd-func (lambda ()
+                       (store *population*
+                              (format nil "~a/~d.store"
+                                      *base* *fitness-evals*))))
 )
