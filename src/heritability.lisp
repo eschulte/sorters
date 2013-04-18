@@ -105,3 +105,24 @@
    matrix1))
 
 (matrix-multiply *B* *G*)
+
+
+;;; more analysis
+(defvar *offspring*
+  (restore "results/heritability/offspring.store"))
+
+(with-open-file (out "/tmp/off.csv" :direction :output)
+  (let ((fields '(:CYCLES :INSTRUCTIONS :CACHE-REFERENCES :PAGE-FAULTS
+                  :BRANCHES :BRANCH-MISSES :TASK-CLOCK)))
+    (mapc {format out "~{~a~^,~}~%"}
+          (mapcar (lambda (ind) (mapcar {aget _ ind} fields))
+                  (apply #'append (mapcar #'cdr *offspring*))))))
+
+(defvar *G*
+  '((     1 0.9780 0.9676 0.2745)
+    (0.9780      1 0.9955 0.4428)
+    (0.9676 0.9955      1 0.4691)
+    (0.2745 0.4428 0.4691      1)))
+
+(matrix-multiply *G* *B*)
+;; => ((60.927734) (62.240204) (62.118378) (29.297161))
