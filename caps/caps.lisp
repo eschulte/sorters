@@ -1,3 +1,4 @@
+#|
 (time
  (with-open-file (out "/dev/null" :direction :output
                       :if-exists :overwrite
@@ -9,6 +10,7 @@
                                          out)
                              (recur b)))))
        (recur 32)))))
+|#
 
 ;; Evaluation took:
 ;;   3.589 seconds of real time
@@ -16,3 +18,19 @@
 ;;   99.75% CPU
 ;;   9,658,680,704 processor cycles
 ;;   0 bytes consed
+
+(defun recur (a in out)
+  (declare (optimize speed) (type (unsigned-byte 8) a))
+  (let ((b (the (unsigned-byte 8) (read-byte in nil))))
+    (when b
+      (write-byte (if (and (<= b 122) (>= b 97) (= a 32)) (- b 32) b)
+                  out)
+      (recur b in out))))
+
+#+run
+(time
+ (with-open-file (out "/dev/null" :direction :output
+                      :if-exists :overwrite
+                      :element-type '(unsigned-byte 8))
+   (with-open-file (in "/tmp/test" :element-type '(unsigned-byte 8))
+     (recur 32 in out))))
