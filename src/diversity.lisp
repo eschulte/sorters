@@ -87,6 +87,8 @@
 
 
 ;;; Analysis
+#+analysis
+(progn
 (defun collect (list &key (test #'eql) (key #'identity))
   (reduce (lambda (groups ind)
             (if (assoc (funcall key ind) groups :key key :test test)
@@ -126,3 +128,4 @@
 ;; =>
 ;; ((O0 . 911) (OZ . 3756) (O1 . 8099) (OS . 2721) (O3 . 283846) (O2 . 270389)
 ;;  (OFAST . 60))
+)
