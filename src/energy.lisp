@@ -43,12 +43,17 @@
                          :direction :output
                          :if-exists :append
                          :if-does-not-exist :create)
-      (format out "~&~{~a~^ ~}~%"
-              (mapcar #'float
-                      (list *fitness-evals*
-                            ;; start saving min, median *and* mean for pop stats
-                            (if (null multi) 0 (mean multi))
-                            (if (null edits) 0 (mean edits)))))))
+      (format
+       out "~&~{~a~^ ~}~%"
+       (mapcar #'float
+               (list *fitness-evals*
+                     ;; start saving min, median *and* mean for pop stats
+                     (if (null multi) 0 (mean multi))
+                     (if (null edits) 0 (mean edits))
+                     ;; O3 penetration
+                     (reduce #'+ (mapcar [{count-if {assoc :O3}} #'genome]
+                                         *population*))
+                     (reduce #'+ (mapcar [#'length #'genome] *population*)))))))
   (when (zerop (mod *checkpoint-counter* 16))
     ;; individual metrics
     (with-open-file (out (format nil "~a/ind.stats" *base*)
@@ -95,7 +100,8 @@
 ;; 122502,branch-misses
 ;; 6.351270,task-clock
 
-#|
+#+O3
+(progn
 (defvar *O3* '((:cycles           . 13500443)
                (:instructions     . 19029847)
                (:cache-references . 33400)
@@ -106,4 +112,28 @@
         *energy-model*
         :initial-value 0)
 ;; => 6.833021e8
-|#
+)
+
+;; (stats *orig*)
+;; ((:EXIT . 0) (:ERROR . 0) (:CYCLES . 33136998) (:INSTRUCTIONS . 49626497)
+;;  (:CACHE-REFERENCES . 33159) (:PAGE-FAULTS . 375) (:BRANCHES . 9239904)
+;;  (:BRANCH-MISSES . 147008) (:TASK-CLOCK . 15.573425))
+
+
+;;; O3 incorporation
+;;
+;; Incorporating O3 into the running population, but first we're
+;; tagging all of the lines of its genome with markers.
+;;
+;; We'll also save the best we had before O3 was incorporated.
+;;
+#+O3-incorporation
+(progn
+(defvar *pre-best* (extremum *population* #'< :key #'fitness))
+
+(fitness *pre-best*) ;; => 1.1575474e9
+
+*fitness-evals* ;; => 2796737
+
+(push *O3* *population*)
+)
