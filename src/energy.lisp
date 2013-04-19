@@ -82,3 +82,28 @@
               :period-func #'checkpoint))
     :name (format nil "opt-~d" i)))
 )
+
+
+;;; O3
+;; O3 output
+;; 0,error
+;; 13500443,cycles
+;; 19029847,instructions
+;; 33400,cache-references
+;; 374,page-faults
+;; 4172943,branches
+;; 122502,branch-misses
+;; 6.351270,task-clock
+
+#|
+(defvar *O3* '((:cycles           . 13500443)
+               (:instructions     . 19029847)
+               (:cache-references . 33400)
+               (:page-faults      . 374)))
+
+(reduce (lambda-bind (total (metric . coefficient))
+          (+ total (* (aget metric *O3*) coefficient)))
+        *energy-model*
+        :initial-value 0)
+;; => 6.833021e8
+|#
