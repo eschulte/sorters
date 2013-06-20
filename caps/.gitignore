@@ -16,3 +16,4 @@
 !*.awk
 !*.rkt
 !*.ml
+!*.factor
