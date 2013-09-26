@@ -1,0 +1,93 @@
+;;; horns.lisp --- Higher Order Random and Neutral Search
+
+;; Copyright (C) 2012  Eric Schulte
+
+;;; Commentary:
+
+;; An experiment proposed by Wes.
+;;
+;; Use both a GA, and random mutation (including higher order mutants
+;; with a distribution... maybe one which approximates that found
+;; through the GA) to collect neutral mutants.
+;;
+;; Save *every* mutation tested with the resulting neutrality.
+
+;;; Code:
+(defpackage :horns
+  (:use :common-lisp
+        :alexandria
+        :metabang-bind
+        :curry-compose-reader-macros
+        :split-sequence
+        :cl-store
+        :cl-ppcre
+        :bordeaux-threads
+        :software-evolution
+        :software-evolution-utility))
+(in-package :horns)
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (enable-curry-compose-reader-macros))
+
+(defvar orig         nil         "Original program.")
+(defvar budget      (expt 2 18)  "Fitness budget.")
+(defvar threads      nil         "Holds all running threads.")
+(defvar num-threads (expt 2 5)   "Number of threads to run simultaneously.")
+(defvar results      nil         "Holds all fitness results.")
+
+;; record all mutations for each individual
+(defclass asm-w/muts (asm)
+  ((mutations :initarg :mutations :accessor mutations :initform nil)))
+
+(defmethod apply-mutation :around ((asm-w/muts asm-w/muts) op)
+  (call-next-method) (push op (mutations asm-w/muts))
+  asm-w/muts)
+
+
+;;; GA search for neutral variants
+(setf
+ *max-population-size* (expt 2 10)   ; large populations for diversity
+ *tournament-size* 2                 ; more explore than exploit
+ *fitness-predicate* #'>             ; we prefer more tests are passed
+ *work-dir* "sh-runner/work"         ; use an external runner
+ )
+
+(defun test (asm)
+  "Test ASM returning the number of tests passed out of 10."
+  (with-temp-file (bin)
+    (phenome asm :bin bin)
+    (multiple-value-bind (stdout stderr errno) (shell "./bin/test.sh ~a" bin)
+      (declare (ignorable stderr))
+      (or (and (zerop errno) (ignore-errors (parse-number stdout)))
+          0))))
+
+(defun every-fn (asm)
+  "Record mutation and fitness information on every individual tested."
+  (push (list (cons :mutations (mutations asm))
+              (cons :fitness   (fitness asm)))
+        results))
+
+
+;;; TODO: Random Search (needs order distribution from GA)
+
+
+;;; Run
+(defun run (source)
+  "Run neutral search starting with SOURCE."
+  (setf
+   results nil
+   *fitness-evals* 0
+   orig (from-file (make-instance 'asm-w/muts) source)
+   (fitness orig) (test orig)
+   *population* (list orig))
+  (assert (= 10 (fitness orig)) (orig) "Original is not neutral")
+  (loop :for n :below num-threads :do
+     (push (make-thread
+            (lambda ()
+              (evolve #'test :max-evals budget :every-fn #'every-fn))
+            :name (format nil "opt-~d" n))
+           threads))
+  (mapc #'join-thread threads)
+  (store results (make-pathname :directory (pathname-directory source)
+                                :name (pathname-name source)
+                                :type "store")))
+;; (make-thread (lambda () (run "sorters/quick_c.s")) :name "quick_c")
