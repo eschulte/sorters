@@ -53,18 +53,17 @@
 
 (defun test (asm)
   "Test ASM returning the number of tests passed out of 10."
-  (with-temp-file (bin)
-    (phenome asm :bin bin)
-    (multiple-value-bind (stdout stderr errno) (shell "./bin/test.sh ~a" bin)
-      (declare (ignorable stderr))
-      (or (and (zerop errno) (ignore-errors (parse-number stdout)))
-          0))))
-
-(defun every-fn (asm)
-  "Record mutation and fitness information on every individual tested."
-  (push (list (cons :mutations (mutations asm))
-              (cons :fitness   (fitness asm)))
-        results))
+  (let ((fitness
+         (with-temp-file (bin)
+           (phenome asm :bin bin)
+           (multiple-value-bind (out err errno) (shell "./bin/test.sh ~a" bin)
+             (declare (ignorable err))
+             (or (and (zerop errno) (ignore-errors (parse-number out)))
+                 0)))))
+    ;; Record mutation and fitness information on every individual tested
+    (push (list (cons :mutations (mutations asm)) (cons :fitness fitness))
+          results)
+    fitness))
 
 
 ;;; TODO: Random Search (needs order distribution from GA)
@@ -81,10 +80,8 @@
    *population* (list orig))
   (assert (= 10 (fitness orig)) (orig) "Original is not neutral")
   (loop :for n :below num-threads :do
-     (push (make-thread
-            (lambda ()
-              (evolve #'test :max-evals budget :every-fn #'every-fn))
-            :name (format nil "opt-~d" n))
+     (push (make-thread (lambda () (evolve #'test :max-evals budget))
+                        :name (format nil "opt-~d" n))
            threads))
   (mapc #'join-thread threads)
   (store results (make-pathname :directory (pathname-directory source)
