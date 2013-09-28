@@ -38,6 +38,15 @@
 (defclass asm-w/muts (asm)
   ((mutations :initarg :mutations :accessor mutations :initform nil)))
 
+(defmethod copy ((asm asm-w/muts))
+  (with-slots (fitness genome linker flags mutations) asm
+    (make-instance (type-of asm)
+      :fitness fitness
+      :genome (copy-tree genome)
+      :linker linker
+      :flags flags
+      :mutations mutations)))
+
 (defmethod apply-mutation :around ((asm-w/muts asm-w/muts) op)
   (call-next-method) (push op (mutations asm-w/muts))
   asm-w/muts)
