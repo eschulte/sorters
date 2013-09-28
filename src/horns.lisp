@@ -101,4 +101,8 @@
                                     :type (format nil "~a.store" type))))
         (list results *population* orig)
         (list "muts" "pop" "orig")))
-;; (make-thread (lambda () (run "sorters/quick_c.s")) :name "quick_c")
+;; (make-thread (lambda ()
+;;                (mapc #'run (list "sorters/quick_c.s"
+;;                                  "sorters/bubble_c.s"
+;;                                  "sorters/merge_c.s")))
+;;  :name "batch-runner")
