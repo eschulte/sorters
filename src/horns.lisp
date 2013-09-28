@@ -54,12 +54,14 @@
 (defun test (asm)
   "Test ASM returning the number of tests passed out of 10."
   (let ((fitness
-         (with-temp-file (bin)
-           (phenome asm :bin bin)
-           (multiple-value-bind (out err errno) (shell "./bin/test.sh ~a" bin)
-             (declare (ignorable err))
-             (or (and (zerop errno) (ignore-errors (parse-number out)))
-                 0)))))
+         (or (ignore-errors
+               (with-temp-file (bin)
+                 (phenome asm :bin bin)
+                 (multiple-value-bind (out err errno)
+                     (shell "./bin/test.sh ~a" bin)
+                   (declare (ignorable err))
+                   (when (zerop errno) (parse-number out)))))
+             0)))
     ;; Record mutation and fitness information on every individual tested
     (push (list (cons :mutations (mutations asm)) (cons :fitness fitness))
           results)
