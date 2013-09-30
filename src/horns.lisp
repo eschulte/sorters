@@ -51,6 +51,12 @@
   (call-next-method) (push op (mutations asm-w/muts))
   asm-w/muts)
 
+(defmethod crossover :around ((a asm-w/muts) (b asm-w/muts))
+  (multiple-value-bind (new-individual crossover-data) (call-next-method)
+    (setf (mutations new-individual)
+          (list (list :crossover crossover-data (mutations a) (mutations b))))
+    (values new-individual crossover-data)))
+
 
 ;;; GA search for neutral variants
 (setf
@@ -69,7 +75,8 @@
                  (multiple-value-bind (out err errno)
                      (shell "./bin/test.sh ~a" bin)
                    (declare (ignorable err))
-                   (when (zerop errno) (parse-number out)))))
+                   (when (and (zerop errno) out (stringp out))
+                     (parse-number out)))))
              0)))
     ;; Record mutation and fitness information on every individual tested
     (push (list (cons :mutations (mutations asm)) (cons :fitness fitness))
@@ -90,11 +97,12 @@
    (fitness orig) (test orig)
    *population* (list orig))
   (assert (= 10 (fitness orig)) (orig) "Original is not neutral")
-  (loop :for n :below num-threads :do
-     (push (make-thread (lambda () (evolve #'test :max-evals budget))
-                        :name (format nil "opt-~d" n))
-           threads))
-  (mapc #'join-thread threads)
+  (ignore-errors
+    (loop :for n :below num-threads :do
+       (push (make-thread (lambda () (evolve #'test :max-evals budget))
+                          :name (format nil "opt-~d" n))
+             threads))
+    (mapc #'join-thread threads))
   (mapc (lambda (obj type)
           (store obj (make-pathname :directory (pathname-directory source)
                                     :name (pathname-name source)
