@@ -95,7 +95,7 @@
    *fitness-evals* 0
    orig (from-file (make-instance 'asm-w/muts) source)
    (fitness orig) (test orig)
-   *population* (list orig))
+   *population* (loop :for i :below *max-population-size* :collect orig))
   (assert (= 10 (fitness orig)) (orig) "Original is not neutral")
   (ignore-errors
     (loop :for n :below num-threads :do
