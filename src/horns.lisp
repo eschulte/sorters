@@ -114,3 +114,42 @@
 ;;                                  "sorters/bubble_c.s"
 ;;                                  "sorters/merge_c.s")))
 ;;  :name "batch-runner")
+
+
+;;; Analysis
+(defvar path-to-feedgnuplot "/usr/bin/feedgnuplot")
+
+(defun feedgnuplot (list &key domain lines histogram)
+  (let ((proc
+         (#+ccl ccl:run-program
+          #+sbcl sb-ext:run-program
+          path-to-feedgnuplot
+          `(,@(when domain '("--domain"))
+              ,@(when lines  '("--lines"))
+              ,@(when histogram
+                      (list "--exit" "--histogram"
+                            (format nil "~d"
+                                    (if (numberp histogram) histogram 0)))))
+          :input :stream :wait nil)))
+    (with-open-stream (feed
+                       #+ccl (ccl:external-process-input-stream proc)
+                       #+sbcl (sb-ext:process-input proc))
+      (format feed "~{~{~a~^ ~}~^~%~}~%" (mapcar (lambda (el)
+                                                   (if (listp el) el (list el)))
+                                                 list)))
+    proc))
+
+(defun ancestor-length (mut-tree)
+  (if mut-tree
+      (ecase (caar mut-tree)
+        ((:swap :cut :insert)
+         (1+ (ancestor-length (cdr mut-tree))))
+        (:crossover
+         ;; just follow the left branch
+         (ancestor-length (third (car mut-tree)))
+         ;; follow both (too slow for moderate accuracy improvement)
+         ;; (/ (+ (ancestor-length (third (car mut-tree)))
+         ;;       (ancestor-length (fourth (car mut-tree))))
+         ;;    2)
+         ))
+      0))

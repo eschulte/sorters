@@ -7,6 +7,7 @@ merge-broke
 merge
 a.out
 **.fasl
+**.lx32fsl
 
 ## execution traces
 src/*.path
@@ -26,6 +27,7 @@ coverage*
 *.debug.*
 *.cache
 repair*
+**.store
 
 ## archives and results
 *.tar.bz2
