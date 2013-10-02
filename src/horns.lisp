@@ -84,36 +84,65 @@
     fitness))
 
 
-;;; TODO: Random Search (needs order distribution from GA)
+;;; Random Search (needs order distribution from GA)
+(defvar dist (counts (mapcar [#'ancestor-length {aget :mutations}] results))
+  "Distribution of individual sizes.")
+
+(defun pick-dist ()
+  (let ((place (random (reduce #'+ (mapcar #'cdr dist)))))
+    (loop :for (size . count) :in dist :do
+       (if (> place count)
+           (decf place count)
+           (return-from pick-dist size)))))
 
 
 ;;; Run
-(defun run (source)
+(defun run (source type)
   "Run neutral search starting with SOURCE."
+  (assert (member type (list :gp :rand)) (type)
+          "Type must be set to :gp or :rand.")
   (setf
    results nil
    *fitness-evals* 0
    orig (from-file (make-instance 'asm-w/muts) source)
-   (fitness orig) (test orig)
-   *population* (loop :for i :below *max-population-size* :collect orig))
+   (fitness orig) (test orig))
   (assert (= 10 (fitness orig)) (orig) "Original is not neutral")
-  (ignore-errors
-    (loop :for n :below num-threads :do
-       (push (make-thread (lambda () (evolve #'test :max-evals budget))
-                          :name (format nil "opt-~d" n))
-             threads))
-    (mapc #'join-thread threads))
+  (case type
+    (:gp
+     (setf *population*
+           (loop :for i :below *max-population-size* :collect orig))
+     (ignore-errors
+       (loop :for n :below num-threads :do
+          (push (make-thread (lambda () (evolve #'test :max-evals budget))
+                             :name (format nil "opt-~d" n))
+                threads))))
+    (:rand
+     (setf *running* t)
+     (ignore-errors
+       (loop :for n :below num-threads :do
+          (push (make-thread
+                 (lambda ()
+                   (loop :while (and *running* (< *fitness-evals* budget)) :do
+                      (let ((new (copy orig)))
+                        (dotimes (n (pick-dist)) (mutate new))
+                        (test new))))
+                 :name (format nil "opt-~d" n))
+                threads)))))
+  ;; save the results
+  (mapc #'join-thread threads)
   (mapc (lambda (obj type)
           (store obj (make-pathname :directory (pathname-directory source)
                                     :name (pathname-name source)
                                     :type (format nil "~a.store" type))))
         (list results *population* orig)
         (list "muts" "pop" "orig")))
-;; (make-thread (lambda ()
-;;                (mapc #'run (list "sorters/quick_c.s"
-;;                                  "sorters/bubble_c.s"
-;;                                  "sorters/merge_c.s")))
-;;  :name "batch-runner")
+
+#+(or )
+(make-thread (lambda ()
+               (mapc {run _ :rand}
+                     (list "sorters/quick_c.s"
+                           "sorters/bubble_c.s")))
+             :name "batch-runner")
 
 
 ;;; Analysis
