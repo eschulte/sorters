@@ -85,8 +85,10 @@
 
 
 ;;; Random Search (needs order distribution from GA)
-(defvar dist (counts (mapcar [#'ancestor-length {aget :mutations}] results))
-  "Distribution of individual sizes.")
+(defvar dist nil "Distribution of individual sizes.")
+
+#+(or )
+(setf dist (counts (mapcar [#'ancestor-length {aget :mutations}] results)))
 
 (defun pick-dist ()
   (let ((place (random (reduce #'+ (mapcar #'cdr dist)))))
