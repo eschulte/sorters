@@ -127,7 +127,8 @@
                    (loop :while (and *running* (< *fitness-evals* budget)) :do
                       (let ((new (copy orig)))
                         (dotimes (n (pick-dist)) (mutate new))
-                        (test new))))
+                        (test new)
+                        (incf *fitness-evals*))))
                  :name (format nil "opt-~d" n))
                 threads)))))
   ;; save the results
@@ -145,6 +146,32 @@
                      (list "sorters/quick_c.s"
                            "sorters/bubble_c.s")))
              :name "batch-runner")
+
+(defun focused-rand-run (source max)
+  ;; setup
+  (setf
+   results nil
+   *fitness-evals* 0
+   orig (from-file (make-instance 'asm-w/muts) source)
+   (fitness orig) (test orig)
+   *running* t)
+  ;; run
+  (loop :for n :below num-threads :do
+     (push
+      (make-thread
+       (lambda ()
+         (loop :while (and *running* (< *fitness-evals* (* max budget))) :do
+            (let ((new (copy orig)))
+              (dotimes (n (1+ (random max))) (mutate new))
+              (test new)
+              (incf *fitness-evals*))))
+       :name (format nil "opt-~d" n))
+      threads))
+  (mapc #'join-thread threads)
+  ;; save
+  (store results (make-pathname :directory (pathname-directory source)
+                                :name (pathname-name source)
+                                :type (format nil "rand-to-~d.store" max))))
 
 
 ;;; Analysis
