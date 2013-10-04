@@ -150,7 +150,7 @@
 ;;; Analysis
 (defvar path-to-feedgnuplot "/usr/bin/feedgnuplot")
 
-(defun feedgnuplot (list &key domain lines histogram)
+(defun feedgnuplot (list &key domain lines histogram hardcopy)
   (let ((proc
          (#+ccl ccl:run-program
           #+sbcl sb-ext:run-program
@@ -160,7 +160,8 @@
               ,@(when histogram
                       (list "--exit" "--histogram"
                             (format nil "~d"
-                                    (if (numberp histogram) histogram 0)))))
+                                    (if (numberp histogram) histogram 0))))
+              ,@(when hardcopy (list "--hardcopy" hardcopy)))
           :input :stream :wait nil)))
     (with-open-stream (feed
                        #+ccl (ccl:external-process-input-stream proc)
