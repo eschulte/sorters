@@ -34,6 +34,10 @@
 (defvar num-threads (expt 2 5)   "Number of threads to run simultaneously.")
 (defvar results      nil         "Holds all fitness results.")
 
+;; utility
+(defmacro all-hold (&rest args)
+  `(lambda (x) (and ,@(mapcar (lambda (f) `(funcall ,f x)) args))))
+
 ;; record all mutations for each individual
 (defclass asm-w/muts (asm)
   ((mutations :initarg :mutations :accessor mutations :initform nil)))
@@ -212,3 +216,42 @@
          ;;    2)
          ))
       0))
+
+(defvar higher-order-neutral-variants nil)
+(defvar interesting-higher-order-neutral-variants nil)
+
+#+(or )
+(remove-if-not (all-hold [{> _ 1} #'length {aget :mutations}]
+                         [{= 10} {aget :fitness}])
+               results)
+
+(defun ancestors (record)
+  "Return the evaluated ancestors of RECORD."
+  (maplist (lambda (mutations)
+             (let ((new (copy orig)))
+               (dolist (mut (reverse mutations))
+                 (apply-mutation new mut))
+               `((:fitness . ,(test new))
+                 (:mutations . ,mutations))))
+           (cdr (aget :mutations record))))
+
+(defun neutral-ancestors (record)
+  (remove-if-not [{= 10} {aget :fitness}] (ancestors record)))
+
+(defun non-neutral-ancestors (record)
+  (remove-if [{= 10} {aget :fitness}] (ancestors record)))
+
+;; collect all neutral records with non-neutral ancestors
+#+(or )
+(make-thread
+ (lambda ()
+   (loop :for thread-id :below num-threads :do
+      (make-thread (lambda ()
+                     (loop :until (null higher-order-neutral-variants) :do
+                        (let* ((it (pop higher-order-neutral-variants))
+                               (ancestors (non-neutral-ancestors it)))
+                          (unless (null ancestors)
+                            (push `((:base . ,it) (:ancestors . ,ancestors))
+                                  interesting-higher-order-neutral-variants)))))
+                   :name (format nil "checker-~d" thread-id))))
+ :name "batch")
