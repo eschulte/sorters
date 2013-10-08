@@ -1,6 +1,6 @@
 ;;; horns.lisp --- Higher Order Random and Neutral Search
 
-;; Copyright (C) 2012  Eric Schulte
+;; Copyright (C) 2013  Eric Schulte
 
 ;;; Commentary:
 
@@ -255,3 +255,27 @@
                                   interesting-higher-order-neutral-variants)))))
                    :name (format nil "checker-~d" thread-id))))
  :name "batch")
+
+(defun all-ancestors (record-w-non-neuts)
+  (let ((ancestor-muts (aget :ancestors record-w-non-neuts)))
+    (maplist (lambda (mut-group)
+               (let ((fitness
+                      (or (aget :fitness (car (member mut-group ancestor-muts
+                                                      :test #'tree-equal
+                                                      :key {aget :mutations})))
+                          10)))
+                 `((:fitness . ,fitness) (:mutations . ,mut-group))))
+             (aget :mutations (aget :base record-w-non-neuts)))))
+
+(defun really-interesting-transitions (record &aux last results)
+  (loop :for ancestor :in (reverse (all-ancestors record)) :do
+     (when (and last
+                ;; fitness improved
+                (> (aget :fitness ancestor)
+                   (aget :fitness last))
+                ;; not a direct reversion
+                (not (some {intersection (cdr (car (aget :mutations ancestor)))}
+                           (mapcar #'cdr (cdr (aget :mutations ancestor))))))
+       (push ancestor results))
+     (setf last ancestor))
+  results)
