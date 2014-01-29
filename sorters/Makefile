@@ -77,3 +77,38 @@ real-clean: clean
 
 real-real-clean: real-clean
 	rm -f seed
+
+#########################################################################
+# Build unreliable versions of executables, the `ur' utility is
+# available from https://github.com/eschulte/unreliable-asm.
+UR=ur
+UNRELIABILITY:=0.1
+URS  = $(OPTS:.s=_ur_01.s)
+URS += $(OPTS:.s=_ur_05.s)
+URS += $(OPTS:.s=_ur_10.s)
+URS += $(OPTS:.s=_ur_50.s)
+UR_TESTS = $(URS:=-test)
+
+%_ur.s: %.s
+	$(UR) -r $(UNRELIABILITY) $< > $@
+
+%_ur_01.s: %.s
+	$(UR) -r 0.01 $< > $@
+
+%_ur_05.s: %.s
+	$(UR) -r 0.05 $< > $@
+
+%_ur_10.s: %.s
+	$(UR) -r 0.10 $< > $@
+
+%_ur_25.s: %.s
+	$(UR) -r 0.25 $< > $@
+
+%_ur_50.s: %.s
+	$(UR) -r 0.5 $< > $@
+
+# Run the test 100 times, saving the raw results.
+%_ur.test: %_ur
+	@echo "$$(../bin/test.sh $*) _$*";
+
+unreliable: $(UR_TESTS)
