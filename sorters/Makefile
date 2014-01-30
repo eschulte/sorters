@@ -83,11 +83,13 @@ real-real-clean: real-clean
 # available from https://github.com/eschulte/unreliable-asm.
 UR=ur
 UNRELIABILITY:=0.1
-URS  = $(OPTS:.s=_ur_01.s)
-URS += $(OPTS:.s=_ur_05.s)
-URS += $(OPTS:.s=_ur_10.s)
-URS += $(OPTS:.s=_ur_50.s)
-UR_TESTS = $(URS:=.test)
+UR_C_GCC = $(addprefix _, $(C_GCC))
+UR_SRCS  = $(UR_C_GCC:.s=_ur_01.s)
+UR_SRCS += $(UR_C_GCC:.s=_ur_05.s)
+UR_SRCS += $(UR_C_GCC:.s=_ur_10.s)
+UR_SRCS += $(UR_C_GCC:.s=_ur_50.s)
+UR_EXES  = $(UR_SRCS:.s=)
+UR_TESTS = $(UR_EXES:=.test)
 
 %_ur.s: %.s
 	$(UR) -r $(UNRELIABILITY) $< > $@
@@ -107,7 +109,19 @@ UR_TESTS = $(URS:=.test)
 %_ur_50.s: %.s
 	$(UR) -r 0.5 $< > $@
 
-%_ur.test: %_ur
+%_ur_01.test: %_ur
+	for i in $$(seq 100);do ../bin/test.sh -i $<; done > $@;
+%_ur_25.test: %_ur
+	for i in $$(seq 100);do ../bin/test.sh -i $<; done > $@;
+%_ur_05.test: %_ur
+	for i in $$(seq 100);do ../bin/test.sh -i $<; done > $@;
+%_ur_10.test: %_ur
+	for i in $$(seq 100);do ../bin/test.sh -i $<; done > $@;
+%_ur_50.test: %_ur
 	for i in $$(seq 100);do ../bin/test.sh -i $<; done > $@;
 
-unreliable: $(UR_TESTS)
+unreliable-src: $(UR_SRCS)
+
+unreliable-exe: $(UR_EXES)
+
+unreliable-test: $(UR_TESTS)
