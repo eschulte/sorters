@@ -87,7 +87,7 @@ URS  = $(OPTS:.s=_ur_01.s)
 URS += $(OPTS:.s=_ur_05.s)
 URS += $(OPTS:.s=_ur_10.s)
 URS += $(OPTS:.s=_ur_50.s)
-UR_TESTS = $(URS:=-test)
+UR_TESTS = $(URS:=.test)
 
 %_ur.s: %.s
 	$(UR) -r $(UNRELIABILITY) $< > $@
@@ -107,8 +107,7 @@ UR_TESTS = $(URS:=-test)
 %_ur_50.s: %.s
 	$(UR) -r 0.5 $< > $@
 
-# Run the test 100 times, saving the raw results.
 %_ur.test: %_ur
-	@echo "$$(../bin/test.sh $*) _$*";
+	for i in $$(seq 100);do ../bin/test.sh -i $<; done > $@;
 
 unreliable: $(UR_TESTS)
