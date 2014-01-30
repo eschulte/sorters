@@ -79,3 +79,62 @@ can be done with some subset of the racket executable
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
+* Tasks [1/1]
+** DONE Analyze unreliable results
+#+begin_src sh :dir results/unreliable/
+  MEAN_CMD='{
+    for (i=1; i<=NF; i++)
+    {
+        if($i ~ /[0-9.]/){sum[i] += $i; count[i]++}
+        if(i == 1){ line = sum[i]/count[i] }else{ line = line " " sum[i]/count[i]}
+    }
+    print line
+  }'
+  ZERO_CMD='{zeros=0; for(i=1;i<NF; i++){if($i == 0){zeros++;}}; print zeros;}'
+  FAIL_CMD='{fails=0; for(i=1;i<NF; i++){if($i < 0){fails++;}}; print fails;}'
+  
+  echo -e "alg\tflag\tcmps\t01 correct\t01 fail\t05 correct\t05 fail\t10 correct\t10 fail\t50 correct\t50 fail"
+  for alg in bubble insertion merge quick;do
+      for flag in Os O0 O1 O2 O3 Ofast;do
+          ASM=_${alg}_c_gcc_${flag}.s
+          COUNT=$(grep -c $'^\tcmp' $ASM)
+          echo -ne "$alg\t$flag\t$COUNT"
+          for ur in 01 05 10 50;do
+              TEST=_${alg}_c_gcc_${flag}_ur_${ur}.test
+              CORRECT=$(cat $TEST|awk "$ZERO_CMD"|awk "$MEAN_CMD"|tail -1)
+              echo -ne "\t$CORRECT"
+              FAIL=$(cat $TEST|awk "$FAIL_CMD"|awk "$MEAN_CMD"|tail -1)
+              echo -ne "\t$FAIL"
+          done
+          echo ""
+      done
+  done
+#+end_src
+
+#+Caption: Average correct and failed sorting runs by % unreliable assembler comparisons.
+| alg       | flag  | cmps | 1% correct | 1% fail | 5% correct | 5% fail | 10% correct | 10% fail | 50% correct | 50% fail |
+|-----------+-------+------+------------+---------+------------+---------+-------------+----------+-------------+----------|
+| bubble    | Os    |    4 |       1.43 |    4.18 |       1.29 |    4.37 |        1.37 |     4.53 |        1.26 |     4.52 |
+| bubble    | O0    |    5 |       2.58 |    0.44 |       2.57 |    0.33 |        2.68 |     0.44 |        2.64 |     0.36 |
+| bubble    | O1    |    5 |          0 |    7.82 |          0 |    7.95 |           0 |     7.75 |           0 |     7.82 |
+| bubble    | O2    |    5 |          0 |    7.75 |          0 |    7.86 |           0 |     7.93 |           0 |     7.93 |
+| bubble    | O3    |    5 |          0 |    7.82 |          0 |    7.89 |           0 |     7.75 |           0 |     7.82 |
+| bubble    | Ofast |    5 |          0 |    7.77 |          0 |    7.82 |           0 |     7.74 |           0 |     7.92 |
+| insertion | Os    |    4 |       1.38 |    4.37 |       1.22 |    4.24 |        1.53 |     4.33 |        1.56 |     4.07 |
+| insertion | O0    |    5 |          0 |       8 |          0 |       8 |           0 |        8 |           0 |        8 |
+| insertion | O1    |    7 |          0 |    8.05 |          0 |    7.98 |           0 |     7.87 |           0 |     7.94 |
+| insertion | O2    |    8 |          0 |    6.34 |          0 |    6.66 |           0 |     6.63 |           0 |     6.78 |
+| insertion | O3    |    8 |          0 |    6.53 |          0 |    6.44 |           0 |     6.81 |           0 |     6.43 |
+| insertion | Ofast |    8 |          0 |    6.52 |          0 |    6.78 |           0 |     6.48 |           0 |      6.4 |
+| merge     | Os    |    7 |       1.54 |    4.13 |        1.6 |    4.01 |        1.53 |     4.05 |        1.45 |     3.86 |
+| merge     | O0    |    7 |          2 |     0.1 |          2 |    0.11 |           2 |     0.13 |           2 |     0.13 |
+| merge     | O1    |    8 |       1.58 |    3.89 |       1.45 |    3.92 |        1.43 |     4.06 |        1.54 |     4.03 |
+| merge     | O2    |    9 |        1.6 |    3.93 |       1.52 |     4.1 |        1.45 |     4.13 |        1.51 |     4.01 |
+| merge     | O3    |  194 |       1.57 |    3.92 |       1.44 |    4.12 |        1.47 |     4.07 |        1.51 |     3.96 |
+| merge     | Ofast |  194 |       1.51 |    4.12 |       1.51 |    3.88 |         1.6 |     4.02 |        1.48 |     3.94 |
+| quick     | Os    |    7 |       0.22 |    8.34 |       0.14 |    8.56 |        0.35 |     8.17 |        0.21 |     8.29 |
+| quick     | O0    |    7 |       3.88 |    0.89 |       4.02 |    0.79 |        4.24 |     0.98 |           4 |     0.85 |
+| quick     | O1    |    9 |          0 |    8.69 |          0 |    8.62 |           0 |     8.69 |           0 |     8.69 |
+| quick     | O2    |   10 |          0 |    8.74 |          0 |    8.84 |           0 |     8.65 |           0 |     8.79 |
+| quick     | O3    |   70 |          0 |     7.5 |          0 |    7.48 |           0 |     7.37 |           0 |     7.16 |
+| quick     | Ofast |   70 |          0 |    7.36 |          0 |    7.27 |           0 |     7.39 |           0 |     7.45 |
