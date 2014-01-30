@@ -4,13 +4,17 @@
 #  test and maybe profile a sorting executable
 #
 # OPTIONS:
-#   -t,--test --- the specific test to run (otherwise print # passed)
+#   -t,--test --- the specific test to run
+#                 (otherwise print # passed)
 #   -p,--perf --- return profiling information
 #   -e,--events - list of perf events
+#   -i,--ind ---- return a score for each individual test
+#                 (only has effect when multiple tests run)
 #
 BASE="$(dirname $0)"
 TEST=""
 PERF=""
+IND=""
 EVENTS="cycles,instructions,cache-references,page-faults,branches,branch-misses,task-clock"
 PERF_FILE=$(mktemp)
 if [ -z "$LIMIT" ];then LIMIT="${BASE}/limit"; fi
@@ -24,7 +28,7 @@ HELP_TEXT=$(cat "$0" \
         |cut -c3-)
 if [ $(grep "\-h" <(echo "$1")) ];then echo "$HELP_TEXT"; exit 0; fi
 
-eval set -- $(getopt -o ht:p -l help,test:,perf -- "$@" \
+eval set -- $(getopt -o ht:pi -l help,test:,perf,ind -- "$@" \
     || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
@@ -32,6 +36,7 @@ while [ $# -gt 0 ];do
         -h|--help) echo "$HELP_TEXT" && exit 0;;
         -t|--test) TEST="$2"; shift;;
         -p|--perf) PERF="yes";;
+        -i|--ind) IND="yes";;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -48,7 +53,13 @@ run_prog(){
     fi; }
 
 num_diff(){ # difference between two lists
-    diff -wB <(run_prog "$1"|tr ' ' '\n') <(echo "$2"|tr ' ' '\n')|wc -l; }
+    OUT=$(run_prog "$1")
+    ERRNO=$?
+    if [ $ERRNO -eq 0 ];then
+        echo $(diff -wB <(echo "$OUT"|tr ' ' '\n') <(echo "$2"|tr ' ' '\n')|wc -l)
+    else
+        echo "-$ERRNO"
+    fi; }
 
 run(){
     if [ $1 -gt 9 ];then
@@ -85,17 +96,33 @@ OUTPUTS[8]="8268 11362 12491 14862 28075 34709 36390 40124 41004 43942 45069 491
 OUTPUTS[9]="0 0 0 0 1 1 1 1 1 1"
 
 if [ -z "$TEST" ];then
-    passed=0
+    if [ -z $IND ];then
+        passed=0
+    else
+        declare -a passed
+    fi
     for t in {0..9};do
         ERR=$(run $t)
-        if [ $ERR -eq 0 ];then
-            passed=$(($passed + 1))
+        if [ -z $IND ];then
+            if [ $ERR -eq 0 ];then
+                passed=$(($passed + 1))
+            fi
+        else
+            passed+=($ERR)
         fi
     done
     if [ -z "$PERF" ];then
-        echo $passed
+        if [ -z $IND ];then
+            echo "$passed"
+        else
+            echo "${passed[@]}"
+        fi
     else
-        echo "$passed,passed"
+        if [ -z $IND ];then
+            echo "$passed,passed"
+        else
+            echo "${passed[@]},passed"
+        fi
         cat $PERF_FILE|tail -n +3
     fi
 else
