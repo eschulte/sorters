@@ -79,8 +79,9 @@ can be done with some subset of the racket executable
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
-* Tasks [1/1]
+* Tasks [1/2]
 ** DONE Analyze unreliable results
+*** Table
 #+begin_src sh :dir results/unreliable/
   MEAN_CMD='{
     for (i=1; i<=NF; i++)
@@ -138,3 +139,11 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 | quick     | O2    |   10 |          0 |    8.74 |          0 |    8.84 |           0 |     8.65 |           0 |     8.79 |
 | quick     | O3    |   70 |          0 |     7.5 |          0 |    7.48 |           0 |     7.37 |           0 |     7.16 |
 | quick     | Ofast |   70 |          0 |    7.36 |          0 |    7.27 |           0 |     7.39 |           0 |     7.45 |
+
+
+*** TODO table fixes
+- make percents
+- include run cmps (broken out into reliable and un-reliable)
+- graph
+- fail -> error
+- include "wrong"
