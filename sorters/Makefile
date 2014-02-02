@@ -89,33 +89,33 @@ UR_EXES  = $(UR_SRCS:.s=)
 UR_TESTS = $(UR_EXES:=.test)
 
 %_ur_0.s: %.s
-	$(UR) -t -u 0 $< > $@
+	$(UR) $(UR_FLAGS)-u 0 $< > $@
 %_ur_0.001.s: %.s
-	$(UR) -t -u 0.001 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.001 $< > $@
 %_ur_0.0025.s: %.s
-	$(UR) -t -u 0.0025 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.0025 $< > $@
 %_ur_0.005.s: %.s
-	$(UR) -t -u 0.005 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.005 $< > $@
 %_ur_0.0075.s: %.s
-	$(UR) -t -u 0.0075 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.0075 $< > $@
 %_ur_0.01.s: %.s
-	$(UR) -t -u 0.01 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.01 $< > $@
 %_ur_0.025.s: %.s
-	$(UR) -t -u 0.025 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.025 $< > $@
 %_ur_0.05.s: %.s
-	$(UR) -t -u 0.05 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.05 $< > $@
 %_ur_0.075.s: %.s
-	$(UR) -t -u 0.075 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.075 $< > $@
 %_ur_0.1.s: %.s
-	$(UR) -t -u 0.1 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.1 $< > $@
 %_ur_0.25.s: %.s
-	$(UR) -t -u 0.25 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.25 $< > $@
 %_ur_0.5.s: %.s
-	$(UR) -t -u 0.5 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.5 $< > $@
 %_ur_0.75.s: %.s
-	$(UR) -t -u 0.75 $< > $@
+	$(UR) $(UR_FLAGS)-u 0.75 $< > $@
 %_ur_1.s: %.s
-	$(UR) -t -u 1 $< > $@
+	$(UR) $(UR_FLAGS)-u 1 $< > $@
 
 %.test: %
 	for i in $$(seq 100);do ../bin/test.sh -i $<; echo "" >&2; done >$@ 2>$@;
