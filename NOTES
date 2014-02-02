@@ -216,14 +216,27 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
    #+end_src
 
 4. plot
-   #+begin_src gnuplot :results silent
+   #+begin_src gnuplot :file results/unreliable-sorters.svg
+     set term svg size 640,600 dynamic
+     set title '% Correct Output of Sorting Programs Using Unreliable x86 cmp Operations'
+     set ylabel '% correct output'
+     set xlabel '% chance of correct results from cmp'
+     set key above
      set key autotitle columnhead
      set logscale x
-     plot for [i=2:7]   "/tmp/correct" u 1:i w lines lt 1, \
-          for [i=8:13]  "/tmp/correct" u 1:i w lines lt 2, \
-          for [i=14:19] "/tmp/correct" u 1:i w lines lt 3, \
-          for [i=20:25] "/tmp/correct" u 1:i w lines lt 4
+     set termoption dash
+     do for [i=0:5] { set style line (i+2) lt i lc rgb "red" }
+     do for [i=0:5] { set style line (i+8) lt i lc rgb "orange" }
+     do for [i=0:5] { set style line (i+14) lt i lc rgb "blue" }
+     do for [i=0:5] { set style line (i+20) lt i lc rgb "green" }
+     plot for [i=2:7]   "/tmp/correct" u 1:i w lines linestyle i, \
+     for [i=8:13]  "/tmp/correct" u 1:i w lines linestyle i, \
+     for [i=14:19] "/tmp/correct" u 1:i w lines linestyle i, \
+     for [i=20:25] "/tmp/correct" u 1:i w lines linestyle i;
    #+end_src
+
+   #+RESULTS:
+   [[file:results/unreliable-sorters.svg]]
 
 *** TODO table fixes [3/5]
 - [X] make percents
