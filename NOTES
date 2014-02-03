@@ -218,7 +218,7 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
      set term svg size 640,600 dynamic
      set title '% Correct Output of Sorting Programs Using Unreliable x86 cmp Operations'
      set ylabel '% correct output'
-     set xlabel '% chance of correct results from cmp'
+     set xlabel '% chance of unreliable result from cmp'
      set key above
      set key autotitle columnhead
      set logscale x
