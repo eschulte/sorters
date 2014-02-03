@@ -210,9 +210,7 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 3. write to files for plotting
    #+begin_src bash :var in=plain :results silent
      GRADATIONS=(0 0.001 0.0025 0.005 0.0075 0.01 0.025 0.05 0.075 0.1 0.25 0.5 0.75 1)
-     paste <(echo -e "perc\n${GRADATIONS[@]}"|tr ' ' '\n') <(echo "$in"|grep -i "correct\|alg") > /tmp/correct
-     paste <(echo "${GRADATIONS[@]}"|tr ' ' '\n') <(echo "$in"|grep wrong) > /tmp/wrong
-     paste <(echo "${GRADATIONS[@]}"|tr ' ' '\n') <(echo "$in"|grep error) > /tmp/error
+     paste <(echo -e "perc\n${GRADATIONS[@]}"|tr ' ' '\n'|awk '{print ($1 * 100.0)}') <(echo "$in"|grep -i "correct\|alg") > /tmp/correct
    #+end_src
 
 4. plot
@@ -238,10 +236,10 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
    #+RESULTS:
    [[file:results/unreliable-sorters.svg]]
 
-*** TODO table fixes [3/5]
+*** TODO table fixes [5/6]
 - [X] make percents
 - [ ] include run cmps (broken out into reliable and un-reliable)
-- [ ] graph
+- [X] graph
 - [X] fail -> error
 - [X] include "wrong"
-- [ ] what's causing errors for non O0 optimization levels?
+- [X] what's causing errors for non O0 optimization levels?
