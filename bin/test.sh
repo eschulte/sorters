@@ -10,11 +10,16 @@
 #   -e,--events - list of perf events
 #   -i,--ind ---- return a score for each individual test
 #                 (only has effect when multiple tests run)
+#   -c,--cmp ---- score based on number of unsorted elements
+#   -r,--raw ---- print raw diff of test output
+#   -L,--no-limit - don't use a limit sandbox script
 #
 BASE="$(dirname $0)"
 TEST=""
 PERF=""
 IND=""
+CMP=""
+RAW=""
 EVENTS="cycles,instructions,cache-references,page-faults,branches,branch-misses,task-clock"
 PERF_FILE=$(mktemp)
 if [ -z "$LIMIT" ];then LIMIT="${BASE}/limit"; fi
@@ -28,7 +33,7 @@ HELP_TEXT=$(cat "$0" \
         |cut -c3-)
 if [ $(grep "\-h" <(echo "$1")) ];then echo "$HELP_TEXT"; exit 0; fi
 
-eval set -- $(getopt -o ht:pi -l help,test:,perf,ind -- "$@" \
+eval set -- $(getopt -o ht:picrL -l help,test:,perf,ind,cmp,raw,no-limit -- "$@" \
     || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
@@ -37,6 +42,9 @@ while [ $# -gt 0 ];do
         -t|--test) TEST="$2"; shift;;
         -p|--perf) PERF="yes";;
         -i|--ind) IND="yes";;
+        -c|--cmp) CMP="yes";;
+        -r|--raw) RAW="yes";;
+        -L|--no-limit) LIMIT="";;
         (--) shift; break;;
         (-*) error "unrecognized option $1";;
         (*)  break;;
@@ -52,25 +60,39 @@ run_prog(){
         $LIMIT perf stat -x, -e "$EVENTS" --append -o $PERF_FILE $PROG $1
     fi; }
 
-num_diff(){ # difference between two lists
+num(){
     OUT=$(run_prog "$1")
     ERRNO=$?
+    if [ ! -z $RAW ];then
+        paste <(echo "$2"|tr ' ' '\n') <(echo "$OUT"|tr ' ' '\n') >&2
+    fi
     if [ $ERRNO -eq 0 ];then
-        echo $(diff -wB <(echo "$OUT"|tr ' ' '\n') <(echo "$2"|tr ' ' '\n')|wc -l)
+        if [ -z $CMP ];then
+            num_diff "$OUT" "$2"
+        else
+            num_cmp "$OUT" "$2"
+        fi
     else
         echo "-$ERRNO"
     fi; }
 
+num_diff(){ # difference between two lists
+    echo $(diff -wB <(echo "$1"|tr ' ' '\n') <(echo "$2"|tr ' ' '\n')|wc -l); }
+
+num_cmp(){ # number of inverted comparisons in sorted list
+    cmp-test <(echo "$2"|tr ' ' '\n') <(echo "$1"|tr ' ' '\n');
+    echo $?; }
+
 run(){
     if [ $1 -gt 9 ];then
         if [ -f "$BASE/$1.in" ] && [ -f "$BASE/$1.out" ];then
-            num_diff "$(cat "$BASE/$1.in")" "$(cat "$BASE/$1.out")"
+            num "$(cat "$BASE/$1.in")" "$(cat "$BASE/$1.out")"
         else
             echo "test '$BASE/$1.[in|out]' not found" >&2
             exit 1
         fi
     else
-        num_diff "$(echo "${INPUTS[$1]}")" "$(echo "${OUTPUTS[$1]}")"
+        num "$(echo "${INPUTS[$1]}")" "$(echo "${OUTPUTS[$1]}")"
     fi; }
 
 INPUTS[0]="1 4 56 2 43 8 76 12 43 7"
