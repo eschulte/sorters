@@ -243,3 +243,37 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 - [X] fail -> error
 - [X] include "wrong"
 - [X] what's causing errors for non O0 optimization levels?
+** TODO Deep Analysis of Insertion Sort
+1. compiled unreliable version with
+   #+begin_src sh
+   ur -t -u 0.01 sorters/insertion_c.s > sorters/insertion_c_ur_0.01_t.s
+   #+end_src
+
+2. traced segfaulting unreliable traces with the following
+   #+begin_src sh
+   for i in {0..100};do
+     test.sh -c -i -t 1 ./sorters/insertion_c_ur_0.01_t
+   done 2>&1 |grep "\-139"
+   #+end_src
+   : rrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr-139
+   : rrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrurru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrurrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrru-139
+   : rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrurrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrru-139
+
+3. looking deeper into the first erring trace
+   : rrrrrrrrrrru
