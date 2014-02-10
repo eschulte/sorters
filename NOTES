@@ -80,9 +80,9 @@ can be done with some subset of the racket executable
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
-* Tasks [3/9]
-** TODO Analyze unreliable results [3/7]
-*** TODO Initial Runs and Results [3/4]
+* Tasks [4/9]
+** TODO Analyze unreliable results [4/7]
+*** TODO Initial Runs and Results [4/4]
 **** DONE Error Rate
 1. parse data from raw results
    #+name: unreliable-sorters
@@ -581,8 +581,9 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 | flag_bubble_associative_math_ur_0.01.test                  | 24.7685 |
 | flag_bubble_tree_fre_ur_0.01.test                          |  24.805 |
 
-**** TODO look at the number of comparisons per successful sort
-#+begin_src sh :dir results/unreliable/
+**** DONE look at the number of comparisons per successful sort
+#+name: number-of-comparisons
+#+begin_src sh :dir results/unreliable/ :cache yes
   GRADATIONS=(0 0.001 0.0025 0.005 0.0075 0.01 0.025 0.05 0.075 0.1 0.25 0.5 0.75 1)
   echo -e "sorter\terror\tcomparisons"
   for alg in bubble insertion merge quick;do
@@ -597,32 +598,57 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
   done
 #+end_src
 
-#+RESULTS:
-| sorter                           |   error | comparisons |
-| _bubble_c_gcc_Os_ur_0.test       |   136.6 |     1379.22 |
-| _bubble_c_gcc_O0_ur_0.test       |     127 |     150.109 |
-| _bubble_c_gcc_O1_ur_0.test       |     139 |           2 |
-| _bubble_c_gcc_O2_ur_0.test       |     139 |           2 |
-| _bubble_c_gcc_O3_ur_0.test       |     139 |           2 |
-| _bubble_c_gcc_Ofast_ur_0.test    |     139 |           2 |
-| _insertion_c_gcc_Os_ur_0.test    |   136.6 |      14.318 |
-| _insertion_c_gcc_O0_ur_0.test    |     127 |     90.1608 |
-| _insertion_c_gcc_O1_ur_0.test    |     139 |           2 |
-| _insertion_c_gcc_O2_ur_0.test    |     139 |           2 |
-| _insertion_c_gcc_O3_ur_0.test    |     139 |           2 |
-| _insertion_c_gcc_Ofast_ur_0.test |     139 |           2 |
-| _merge_c_gcc_Os_ur_0.test        |   136.6 |     63505.6 |
-| _merge_c_gcc_O0_ur_0.test        |   136.6 |      16.774 |
-| _merge_c_gcc_O1_ur_0.test        |   136.6 |     63505.5 |
-| _merge_c_gcc_O2_ur_0.test        |   136.6 |     63503.8 |
-| _merge_c_gcc_O3_ur_0.test        |   136.6 |      105945 |
-| _merge_c_gcc_Ofast_ur_0.test     | 149.858 |     26483.5 |
-| _quick_c_gcc_Os_ur_0.test        | 139.633 |     11496.6 |
-| _quick_c_gcc_O0_ur_0.test        |     127 |     41.6101 |
-| _quick_c_gcc_O1_ur_0.test        |     139 |           2 |
-| _quick_c_gcc_O2_ur_0.test        |     139 |           2 |
-| _quick_c_gcc_O3_ur_0.test        |     139 |           2 |
-| _quick_c_gcc_Ofast_ur_0.test     |     139 |           2 |
+#+RESULTS[4b88e3f9b1f5da7e2622e6f7825ca49d39b5d256]: number-of-comparisons
+| sorter                           | error | comparisons |
+| _bubble_c_gcc_Os_ur_0.test       |     0 |     986.809 |
+| _bubble_c_gcc_O0_ur_0.test       |     0 |      1000.4 |
+| _bubble_c_gcc_O1_ur_0.test       |     0 |     972.206 |
+| _bubble_c_gcc_O2_ur_0.test       |     0 |     972.206 |
+| _bubble_c_gcc_O3_ur_0.test       |     0 |     972.206 |
+| _bubble_c_gcc_Ofast_ur_0.test    |     0 |     972.206 |
+| _insertion_c_gcc_Os_ur_0.test    |     0 |     314.301 |
+| _insertion_c_gcc_O0_ur_0.test    |     0 |     580.766 |
+| _insertion_c_gcc_O1_ur_0.test    |     0 |     563.244 |
+| _insertion_c_gcc_O2_ur_0.test    |     0 |     564.251 |
+| _insertion_c_gcc_O3_ur_0.test    |     0 |     564.251 |
+| _insertion_c_gcc_Ofast_ur_0.test |     0 |     564.251 |
+| _merge_c_gcc_Os_ur_0.test        |     0 |     400.807 |
+| _merge_c_gcc_O0_ur_0.test        |     0 |     400.807 |
+| _merge_c_gcc_O1_ur_0.test        |     0 |     384.291 |
+| _merge_c_gcc_O2_ur_0.test        |     0 |     384.291 |
+| _merge_c_gcc_O3_ur_0.test        |     0 |     384.291 |
+| _merge_c_gcc_Ofast_ur_0.test     |     0 |     384.291 |
+| _quick_c_gcc_Os_ur_0.test        |     0 |     234.275 |
+| _quick_c_gcc_O0_ur_0.test        |     0 |     237.967 |
+| _quick_c_gcc_O1_ur_0.test        |     0 |     233.267 |
+| _quick_c_gcc_O2_ur_0.test        |     0 |     233.267 |
+| _quick_c_gcc_O3_ur_0.test        |     0 |     233.267 |
+| _quick_c_gcc_Ofast_ur_0.test     |     0 |     233.267 |
+
+Correlation between error at 0.001 unreliability and number of
+comparisons at full reliability.
+#+name: unreliability-error-by-comparisons
+#+header: :cache yes
+#+header: :results scalar
+#+begin_src bash :var success=unreliable-error-rate[,2] comparisons=number-of-comparisons
+  paste <(echo "$comparisons") <(echo "$success")|cut -f3,4|tail -n +2|~/src/cla/modules/corr
+#+end_src
+
+#+RESULTS[2365ea17a3741407bf29a8c895789d42f47ecf3c]: unreliability-error-by-comparisons
+: 
+: 	Pearson's product-moment correlation
+: 
+: data:  col1 and col2
+: t = 1.0078, df = 22, p-value = 0.3245
+: alternative hypothesis: true correlation is not equal to 0
+: 95 percent confidence interval:
+:  -0.2112328  0.5655372
+: sample estimates:
+:       cor 
+: 0.2100635 
+: 
+
+No strong correlation.
 
 *** TODO Notable Features/Questions
 - Bubble-O0 *never* fails, where as insertion-O0 fails frequently.
