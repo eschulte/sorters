@@ -80,9 +80,9 @@ can be done with some subset of the racket executable
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
-* Tasks [4/8]
-** TODO Analyze unreliable results [4/6]
-*** DONE Initial Runs and Results [3/3]
+* Tasks [3/9]
+** TODO Analyze unreliable results [3/7]
+*** TODO Initial Runs and Results [3/4]
 **** DONE Error Rate
 1. parse data from raw results
    #+name: unreliable-sorters
@@ -370,6 +370,260 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 
 #+RESULTS:
 [[file:results/unreliable-sorters-error-non-fail.svg]]
+**** break it out by flag
+#+name: unreliable-sorters-error-by-flag
+#+begin_src sh  :dir results/unreliable/ :cache yes
+  AVE_ERR='{for(i=1;i<=NF; i++){total+=$i; many+=1}} END {print total/many}'
+  
+  echo -ne "flag"
+  for ur in ${GRADATIONS[@]};do
+      echo -ne "\t$ur"
+  done
+  echo ""
+  for file in flag*test;do
+      echo -e "$file\t$(cat $file|awk "$AVE_ERR")"
+  done
+#+end_src
+
+#+RESULTS[be09f169502c7e597fcc397effedf532a80f32b3]: unreliable-sorters-error-by-flag
+| flag_bubble_sel_sched_pipelining_ur_0.01.test              | 19.9655 |
+| flag_bubble_no_ira_share_spill_slots_ur_0.01.test          | 20.0616 |
+| flag_bubble_tree_vectorize_ur_0.01.test                    | 20.5762 |
+| flag_bubble_sched_stalled_insns_ur_0.01.test               | 20.6015 |
+| flag_bubble_gcse_ur_0.01.test                              | 20.6033 |
+| flag_bubble_mudflapir_ur_0.01.test                         | 20.8019 |
+| flag_bubble_ipa_profile_ur_0.01.test                       | 20.8259 |
+| flag_bubble_sched2_use_superblocks_ur_0.01.test            | 20.9384 |
+| flag_bubble_auto_inc_dec_ur_0.01.test                      | 20.9447 |
+| flag_bubble_merge_all_constants_ur_0.01.test               | 21.0063 |
+| flag_bubble_conserve_stack_ur_0.01.test                    | 21.0729 |
+| flag_bubble_no_peephole2_ur_0.01.test                      |  21.092 |
+| flag_bubble_tree_copyrename_ur_0.01.test                   | 21.0982 |
+| flag_bubble_no_peephole_ur_0.01.test                       | 21.1223 |
+| flag_bubble_stack_protector_ur_0.01.test                   | 21.1534 |
+| flag_bubble_tracer_ur_0.01.test                            |  21.196 |
+| flag_bubble_no_defer_pop_ur_0.01.test                      | 21.2203 |
+| flag_bubble_unswitch_loops_ur_0.01.test                    | 21.2396 |
+| flag_bubble_no_default_inline_ur_0.01.test                 | 21.2675 |
+| flag_bubble_no_math_errno_ur_0.01.test                     | 21.2724 |
+| flag_bubble_dse_ur_0.01.test                               | 21.2727 |
+| flag_bubble_mudflapth_ur_0.01.test                         | 21.3013 |
+| flag_bubble_no_guess_branch_probability_ur_0.01.test       | 21.3595 |
+| flag_bubble_dce_ur_0.01.test                               | 21.3785 |
+| flag_bubble_modulo_sched_allow_regmoves_ur_0.01.test       | 21.4092 |
+| flag_bubble_unroll_all_loops_ur_0.01.test                  | 21.4148 |
+| flag_bubble_split_wide_types_ur_0.01.test                  | 21.4387 |
+| flag_bubble_variable_expansion_in_unroller_ur_0.01.test    | 21.4457 |
+| flag_bubble_cx_fortran_rules_ur_0.01.test                  | 21.4536 |
+| flag_bubble_ipa_pta_ur_0.01.test                           | 21.4713 |
+| flag_bubble_tree_slsr_ur_0.01.test                         | 21.5042 |
+| flag_bubble_optimize_sibling_calls_ur_0.01.test            | 21.5819 |
+| flag_bubble_cse_skip_blocks_ur_0.01.test                   | 21.6013 |
+| flag_bubble_tree_bit_ccp_ur_0.01.test                      | 21.6054 |
+| flag_bubble_fmudflap_ur_0.01.test                          | 21.6096 |
+| flag_bubble_no_trapping_math_ur_0.01.test                  | 21.6715 |
+| flag_bubble_reciprocal_math_ur_0.01.test                   | 21.7029 |
+| flag_bubble_stack_protector_all_ur_0.01.test               | 21.7061 |
+| flag_bubble_fat_lto_objects_ur_0.01.test                   | 21.7424 |
+| flag_bubble_align_jumps_ur_0.01.test                       | 21.7523 |
+| flag_bubble_ira_loop_pressure_ur_0.01.test                 | 21.7524 |
+| flag_bubble_reorder_blocks_ur_0.01.test                    | 21.7789 |
+| flag_bubble_tree_coalesce_vars_ur_0.01.test                | 21.7923 |
+| flag_bubble_unsafe_math_optimizations_ur_0.01.test         | 21.7925 |
+| flag_bubble_graphite_identity_ur_0.01.test                 | 21.8154 |
+| flag_bubble_branch_probabilities_ur_0.01.test              | 21.8332 |
+| flag_bubble_tree_dominator_opts_ur_0.01.test               | 21.8359 |
+| flag_bubble_finite_math_only_ur_0.01.test                  | 21.8613 |
+| flag_bubble_if_conversion_ur_0.01.test                     |  21.863 |
+| flag_bubble_sched_stalled_insns_dep_ur_0.01.test           | 21.8745 |
+| flag_bubble_no_sched_interblock_ur_0.01.test               | 21.8925 |
+| flag_bubble_split_ivs_in_unroller_ur_0.01.test             | 21.8955 |
+| flag_bubble_web_ur_0.01.test                               | 21.9102 |
+| flag_bubble_loop_block_ur_0.01.test                        | 21.9112 |
+| flag_bubble_aggressive_loop_optimizations_ur_0.01.test     | 21.9436 |
+| flag_bubble_tree_dce_ur_0.01.test                          | 21.9843 |
+| flag_bubble_tree_pta_ur_0.01.test                          | 21.9948 |
+| flag_bubble_unit_at_a_time_ur_0.01.test                    | 22.0042 |
+| flag_bubble_branch_target_load_optimize_ur_0.01.test       | 22.0073 |
+| flag_bubble_tree_phiprop_ur_0.01.test                      | 22.0073 |
+| flag_bubble_selective_scheduling2_ur_0.01.test             | 22.0094 |
+| flag_bubble_tree_partial_pre_ur_0.01.test                  | 22.0136 |
+| flag_bubble_no_toplevel_reorder_ur_0.01.test               |  22.074 |
+| flag_bubble_ipa_cp_clone_ur_0.01.test                      | 22.0814 |
+| flag_bubble_caller_saves_ur_0.01.test                      | 22.0866 |
+| flag_bubble_sched_pressure_ur_0.01.test                    | 22.1056 |
+| flag_bubble_inline_functions_ur_0.01.test                  | 22.1064 |
+| flag_bubble_lto_ur_0.01.test                               | 22.1127 |
+| flag_bubble_no_inline_ur_0.01.test                         | 22.1208 |
+| flag_bubble_ira_hoist_pressure_ur_0.01.test                | 22.1385 |
+| flag_bubble_crossjumping_ur_0.01.test                      | 22.1545 |
+| flag_bubble_cx_limited_range_ur_0.01.test                  | 22.1588 |
+| flag_bubble_devirtualize_ur_0.01.test                      | 22.1637 |
+| flag_bubble_align_loops_ur_0.01.test                       | 22.1731 |
+| flag_bubble_tree_loop_distribution_ur_0.01.test            | 22.1785 |
+| flag_bubble_peel_loops_ur_0.01.test                        | 22.1825 |
+| flag_bubble_loop_parallelize_all_ur_0.01.test              | 22.1867 |
+| flag_bubble_gcse_lm_ur_0.01.test                           | 22.2259 |
+| flag_bubble_thread_jumps_ur_0.01.test                      | 22.2409 |
+| flag_bubble_tree_vect_loop_version_ur_0.01.test            | 22.2466 |
+| flag_bubble_ree_ur_0.01.test                               |  22.251 |
+| flag_bubble_btr_bb_exclusive_ur_0.01.test                  | 22.2529 |
+| flag_bubble_tree_loop_if_convert_stores_ur_0.01.test       |  22.256 |
+| flag_bubble_inline_functions_called_once_ur_0.01.test      | 22.2683 |
+| flag_bubble_profile_values_ur_0.01.test                    | 22.2683 |
+| flag_bubble_wpa_ur_0.01.test                               | 22.2835 |
+| flag_bubble_align_functions_ur_0.01.test                   | 22.2902 |
+| flag_bubble_sel_sched_pipelining_outer_loops_ur_0.01.test  | 22.2909 |
+| flag_bubble_indirect_inlining_ur_0.01.test                 | 22.2926 |
+| flag_bubble_merge_constants_ur_0.01.test                   | 22.2944 |
+| flag_bubble_tree_ccp_ur_0.01.test                          | 22.2969 |
+| flag_bubble_schedule_insns2_ur_0.01.test                   | 22.2972 |
+| flag_bubble_sched_dep_count_heuristic_ur_0.01.test         | 22.3375 |
+| flag_bubble_ipa_reference_ur_0.01.test                     | 22.3413 |
+| flag_bubble_no_zero_initialized_in_bss_ur_0.01.test        |  22.351 |
+| flag_bubble_cse_follow_jumps_ur_0.01.test                  | 22.3699 |
+| flag_bubble_tree_sra_ur_0.01.test                          | 22.3719 |
+| flag_bubble_vpt_ur_0.01.test                               | 22.3738 |
+| flag_bubble_lto_report_ur_0.01.test                        | 22.3873 |
+| flag_bubble_gcse_after_reload_ur_0.01.test                 | 22.4042 |
+| flag_bubble_regmove_ur_0.01.test                           | 22.4067 |
+| flag_bubble_ipa_pure_const_ur_0.01.test                    | 22.4415 |
+| flag_bubble_tree_switch_conversion_ur_0.01.test            | 22.4421 |
+| flag_bubble_tree_builtin_call_dce_ur_0.01.test             | 22.4562 |
+| flag_bubble_reschedule_modulo_scheduled_loops_ur_0.01.test | 22.4703 |
+| flag_bubble_predictive_commoning_ur_0.01.test              | 22.4755 |
+| flag_bubble_cprop_registers_ur_0.01.test                   | 22.4995 |
+| flag_bubble_unsafe_loop_optimizations_ur_0.01.test         |  22.512 |
+| flag_bubble_no_function_cse_ur_0.01.test                   | 22.5157 |
+| flag_bubble_optimize_register_move_ur_0.01.test            | 22.5266 |
+| flag_bubble_move_loop_invariants_ur_0.01.test              | 22.5271 |
+| flag_bubble_unroll_loops_ur_0.01.test                      | 22.5277 |
+| flag_bubble_no_branch_count_reg_ur_0.01.test               | 22.5298 |
+| flag_bubble_keep_inline_functions_ur_0.01.test             | 22.5544 |
+| flag_bubble_use_linker_plugin_ur_0.01.test                 | 22.5632 |
+| flag_bubble_sched_critical_path_heuristic_ur_0.01.test     | 22.5689 |
+| flag_bubble_tree_dse_ur_0.01.test                          | 22.6015 |
+| flag_bubble_ivopts_ur_0.01.test                            | 22.6395 |
+| flag_bubble_expensive_optimizations_ur_0.01.test           | 22.7046 |
+| flag_bubble_keep_static_consts_ur_0.01.test                | 22.7186 |
+| flag_bubble_profile_correction_ur_0.01.test                | 22.7445 |
+| flag_bubble_tree_ch_ur_0.01.test                           | 22.7471 |
+| flag_bubble_single_precision_constant_ur_0.01.test         | 22.7508 |
+| flag_bubble_delete_null_pointer_checks_ur_0.01.test        | 22.7573 |
+| flag_bubble_signaling_nans_ur_0.01.test                    | 22.7902 |
+| flag_bubble_loop_nest_optimize_ur_0.01.test                |  22.829 |
+| flag_bubble_gcse_las_ur_0.01.test                          | 22.8337 |
+| flag_bubble_align_labels_ur_0.01.test                      | 22.8413 |
+| flag_bubble_tree_loop_if_convert_ur_0.01.test              | 22.8685 |
+| flag_bubble_rerun_cse_after_loop_ur_0.01.test              | 22.8798 |
+| flag_bubble_tree_loop_im_ur_0.01.test                      | 22.8833 |
+| flag_bubble_selective_scheduling_ur_0.01.test              |  22.905 |
+| flag_bubble_sched_spec_insn_heuristic_ur_0.01.test         | 22.9414 |
+| flag_bubble_sched_spec_load_ur_0.01.test                   | 22.9489 |
+| flag_bubble_forward_propagate_ur_0.01.test                 | 22.9697 |
+| flag_bubble_sched_group_heuristic_ur_0.01.test             | 23.0094 |
+| flag_bubble_tree_ter_ur_0.01.test                          | 23.0167 |
+| flag_bubble_reorder_functions_ur_0.01.test                 | 23.0397 |
+| flag_bubble_tree_loop_linear_ur_0.01.test                  | 23.0428 |
+| flag_bubble_loop_strip_mine_ur_0.01.test                   | 23.0469 |
+| flag_bubble_whole_program_ur_0.01.test                     | 23.0522 |
+| flag_bubble_sched_spec_load_dangerous_ur_0.01.test         | 23.1512 |
+| flag_bubble_early_inlining_ur_0.01.test                    | 23.1587 |
+| flag_bubble_ipa_cp_ur_0.01.test                            | 23.1806 |
+| flag_bubble_sched_rank_heuristic_ur_0.01.test              | 23.1973 |
+| flag_bubble_tree_vrp_ur_0.01.test                          | 23.2236 |
+| flag_bubble_gcse_sm_ur_0.01.test                           | 23.2349 |
+| flag_bubble_sched_last_insn_heuristic_ur_0.01.test         | 23.2492 |
+| flag_bubble_schedule_insns_ur_0.01.test                    | 23.2539 |
+| flag_bubble_data_sections_ur_0.01.test                     | 23.2617 |
+| flag_bubble_vect_cost_model_ur_0.01.test                   | 23.2669 |
+| flag_bubble_prefetch_loop_arrays_ur_0.01.test              | 23.2923 |
+| flag_bubble_tree_pre_ur_0.01.test                          | 23.2941 |
+| flag_bubble_tree_sink_ur_0.01.test                         | 23.2996 |
+| flag_bubble_modulo_sched_ur_0.01.test                      |  23.371 |
+| flag_bubble_float_store_ur_0.01.test                       | 23.4033 |
+| flag_bubble_lto_compression_level_ur_0.01.test             | 23.4201 |
+| flag_bubble_section_anchors_ur_0.01.test                   | 23.4299 |
+| flag_bubble_profile_use_ur_0.01.test                       | 23.4697 |
+| flag_bubble_shrink_wrap_ur_0.01.test                       | 23.4828 |
+| flag_bubble_tree_loop_distribute_patterns_ur_0.01.test     | 23.4838 |
+| flag_bubble_profile_generate_ur_0.01.test                  | 23.4932 |
+| flag_bubble_no_ira_share_save_slots_ur_0.01.test           | 23.4943 |
+| flag_bubble_rounding_math_ur_0.01.test                     | 23.4958 |
+| flag_bubble_rename_registers_ur_0.01.test                  | 23.5188 |
+| flag_bubble_loop_interchange_ur_0.01.test                  | 23.5271 |
+| flag_bubble_tree_reassoc_ur_0.01.test                      | 23.5523 |
+| flag_bubble_branch_target_load_optimize2_ur_0.01.test      | 23.6131 |
+| flag_bubble_compare_elim_ur_0.01.test                      |  23.614 |
+| flag_bubble_tree_loop_optimize_ur_0.01.test                | 23.6524 |
+| flag_bubble_inline_small_functions_ur_0.01.test            | 23.6541 |
+| flag_bubble_hoist_adjacent_loads_ur_0.01.test              | 23.6656 |
+| flag_bubble_no_signed_zeros_ur_0.01.test                   | 23.7273 |
+| flag_bubble_tree_copy_prop_ur_0.01.test                    | 23.8071 |
+| flag_bubble_reorder_blocks_and_partition_ur_0.01.test      | 23.8225 |
+| flag_bubble_strict_aliasing_ur_0.01.test                   | 23.8624 |
+| flag_bubble_partial_inlining_ur_0.01.test                  | 23.8759 |
+| flag_bubble_ipa_sra_ur_0.01.test                           | 23.8781 |
+| flag_bubble_profile_report_ur_0.01.test                    | 23.9039 |
+| flag_bubble_strict_overflow_ur_0.01.test                   | 23.9614 |
+| flag_bubble_omit_frame_pointer_ur_0.01.test                | 23.9645 |
+| flag_bubble_tree_loop_ivcanon_ur_0.01.test                 | 24.0094 |
+| flag_bubble_delayed_branch_ur_0.01.test                    | 24.0647 |
+| flag_bubble_check_data_deps_ur_0.01.test                   | 24.1526 |
+| flag_bubble_function_sections_ur_0.01.test                 | 24.1773 |
+| flag_bubble_no_sched_spec_ur_0.01.test                     | 24.1942 |
+| flag_bubble_tree_tail_merge_ur_0.01.test                   | 24.2134 |
+| flag_bubble_combine_stack_adjustments_ur_0.01.test         | 24.2628 |
+| flag_bubble_if_conversion2_ur_0.01.test                    | 24.6102 |
+| flag_bubble_fast_math_ur_0.01.test                         | 24.6399 |
+| flag_bubble_tree_coalesce_inline_vars_ur_0.01.test         | 24.6806 |
+| flag_bubble_tree_forwprop_ur_0.01.test                     | 24.7165 |
+| flag_bubble_associative_math_ur_0.01.test                  | 24.7685 |
+| flag_bubble_tree_fre_ur_0.01.test                          |  24.805 |
+
+**** TODO look at the number of comparisons per successful sort
+#+begin_src sh :dir results/unreliable/
+  GRADATIONS=(0 0.001 0.0025 0.005 0.0075 0.01 0.025 0.05 0.075 0.1 0.25 0.5 0.75 1)
+  echo -e "sorter\terror\tcomparisons"
+  for alg in bubble insertion merge quick;do
+      for flag in Os O0 O1 O2 O3 Ofast;do
+          TEST=_${alg}_c_gcc_${flag}_ur_0.test
+          ERRS=$(cat $TEST|grep -v "^$"|grep -v "^r"\
+              |awk '{for(i=1;i<=NF; i++){if($i < 0){total = total - $i;}else{total+=$i;}; many+=1}}
+            END{print total/many}')
+          CMPS=$(cat $TEST|grep "^r"|wc|awk '{print (1.0 * $3) / (1.0 * $2)}')
+          echo -e "$TEST\t$ERRS\t$CMPS"
+      done
+  done
+#+end_src
+
+#+RESULTS:
+| sorter                           |   error | comparisons |
+| _bubble_c_gcc_Os_ur_0.test       |   136.6 |     1379.22 |
+| _bubble_c_gcc_O0_ur_0.test       |     127 |     150.109 |
+| _bubble_c_gcc_O1_ur_0.test       |     139 |           2 |
+| _bubble_c_gcc_O2_ur_0.test       |     139 |           2 |
+| _bubble_c_gcc_O3_ur_0.test       |     139 |           2 |
+| _bubble_c_gcc_Ofast_ur_0.test    |     139 |           2 |
+| _insertion_c_gcc_Os_ur_0.test    |   136.6 |      14.318 |
+| _insertion_c_gcc_O0_ur_0.test    |     127 |     90.1608 |
+| _insertion_c_gcc_O1_ur_0.test    |     139 |           2 |
+| _insertion_c_gcc_O2_ur_0.test    |     139 |           2 |
+| _insertion_c_gcc_O3_ur_0.test    |     139 |           2 |
+| _insertion_c_gcc_Ofast_ur_0.test |     139 |           2 |
+| _merge_c_gcc_Os_ur_0.test        |   136.6 |     63505.6 |
+| _merge_c_gcc_O0_ur_0.test        |   136.6 |      16.774 |
+| _merge_c_gcc_O1_ur_0.test        |   136.6 |     63505.5 |
+| _merge_c_gcc_O2_ur_0.test        |   136.6 |     63503.8 |
+| _merge_c_gcc_O3_ur_0.test        |   136.6 |      105945 |
+| _merge_c_gcc_Ofast_ur_0.test     | 149.858 |     26483.5 |
+| _quick_c_gcc_Os_ur_0.test        | 139.633 |     11496.6 |
+| _quick_c_gcc_O0_ur_0.test        |     127 |     41.6101 |
+| _quick_c_gcc_O1_ur_0.test        |     139 |           2 |
+| _quick_c_gcc_O2_ur_0.test        |     139 |           2 |
+| _quick_c_gcc_O3_ur_0.test        |     139 |           2 |
+| _quick_c_gcc_Ofast_ur_0.test     |     139 |           2 |
+
 *** TODO Notable Features/Questions
 - Bubble-O0 *never* fails, where as insertion-O0 fails frequently.
   What's the difference here?
