@@ -80,9 +80,9 @@ can be done with some subset of the racket executable
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
-* Tasks [4/9]
-** TODO Analyze unreliable results [4/7]
-*** TODO Initial Runs and Results [4/4]
+* Tasks [6/10]
+** TODO Analyze unreliable results [6/9]
+*** DONE Initial Runs and Results [5/5]
 **** DONE Error Rate
 1. parse data from raw results
    #+name: unreliable-sorters
@@ -370,7 +370,7 @@ http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 
 #+RESULTS:
 [[file:results/unreliable-sorters-error-non-fail.svg]]
-**** break it out by flag
+**** DONE break it out by flag
 #+name: unreliable-sorters-error-by-flag
 #+begin_src sh  :dir results/unreliable/ :cache yes
   AVE_ERR='{for(i=1;i<=NF; i++){total+=$i; many+=1}} END {print total/many}'
@@ -666,17 +666,21 @@ No strong correlation.
 
 - Insertion-Os and bubble-Os both have much lower failure rates than
   their counterparts.
+*** TODO look at information on segfaults
+Maybe use =/lib/libSegFault.so= with =LD_PRELOAD=.
 
-*** TODO additional runs and fixes [5/7]
+*** TODO additional runs and fixes [7/8]
 - [X] make percents
-- [ ] include run cmps (broken out into reliable and un-reliable)
+- [X] include run cmps (broken out into reliable and un-reliable)
 - [X] graph
 - [X] fail -> error
 - [X] include "wrong"
 - [X] what's causing errors for non O0 optimization levels?
-- [ ] run for each different GCC flag
+- [X] run for each different GCC flag -- not significantly different
+      across single flags
+- [ ] maybe look at all subsets of the O3 flags
 
-** TODO Deep Analysis of Insertion Sort
+** Deep Analysis of Insertion Sort
 1. compiled unreliable version with
    #+begin_src sh
    ur -t -u 0.01 sorters/insertion_c.s > sorters/insertion_c_ur_0.01_t.s
