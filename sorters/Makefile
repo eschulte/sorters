@@ -70,45 +70,58 @@ _%-test: _%.s
 	../bin/neutrality $<
 
 clean:
-	rm -f $(ASM) $(OPTS) $(EXES) $(BASIC_EXES) *.cm* *.o *.hi merge_file_c
+	@rm -f $(ASM) $(OPTS) $(EXES) $(BASIC_EXES) *.cm* *.o *.hi merge_file_c *_ur*
 
 real-clean: clean
-	rm -f $(OPTS:.s=.store)
+	@rm -f $(OPTS:.s=.store) *.test
 
 real-real-clean: real-clean
-	rm -f seed
+	@rm -f seed
 
 #########################################################################
 # Build unreliable versions of executables, the `ur' utility is
 # available from https://github.com/eschulte/unreliable-asm.
 UR=ur
-UNRELIABILITY:=0.1
-URS  = $(OPTS:.s=_ur_01.s)
-URS += $(OPTS:.s=_ur_05.s)
-URS += $(OPTS:.s=_ur_10.s)
-URS += $(OPTS:.s=_ur_50.s)
-UR_TESTS = $(URS:=-test)
+UR_C_GCC = $(addprefix _, $(C_GCC))
+UR_GRADATIONS=0 0.001 0.0025 0.005 0.0075 0.01 0.025 0.05 0.075 0.1 0.25 0.5 0.75 1
+UR_SRCS  = $(foreach num,$(UR_GRADATIONS),$(UR_C_GCC:.s=_ur_$(num).s))
+UR_EXES  = $(UR_SRCS:.s=)
+UR_TESTS = $(UR_EXES:=.test)
 
-%_ur.s: %.s
-	$(UR) -r $(UNRELIABILITY) $< > $@
+%_ur_0.s: %.s
+	$(UR) $(UR_FLAGS)-u 0 $< > $@
+%_ur_0.001.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.001 $< > $@
+%_ur_0.0025.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.0025 $< > $@
+%_ur_0.005.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.005 $< > $@
+%_ur_0.0075.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.0075 $< > $@
+%_ur_0.01.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.01 $< > $@
+%_ur_0.025.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.025 $< > $@
+%_ur_0.05.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.05 $< > $@
+%_ur_0.075.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.075 $< > $@
+%_ur_0.1.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.1 $< > $@
+%_ur_0.25.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.25 $< > $@
+%_ur_0.5.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.5 $< > $@
+%_ur_0.75.s: %.s
+	$(UR) $(UR_FLAGS)-u 0.75 $< > $@
+%_ur_1.s: %.s
+	$(UR) $(UR_FLAGS)-u 1 $< > $@
 
-%_ur_01.s: %.s
-	$(UR) -r 0.01 $< > $@
+%.test: %
+	for i in $$(seq 100);do ../bin/test.sh -i $<; echo "" >&2; done >$@ 2>$@;
 
-%_ur_05.s: %.s
-	$(UR) -r 0.05 $< > $@
+unreliable-src: $(UR_SRCS)
 
-%_ur_10.s: %.s
-	$(UR) -r 0.10 $< > $@
+unreliable-exe: $(UR_EXES)
 
-%_ur_25.s: %.s
-	$(UR) -r 0.25 $< > $@
-
-%_ur_50.s: %.s
-	$(UR) -r 0.5 $< > $@
-
-# Run the test 100 times, saving the raw results.
-%_ur.test: %_ur
-	@echo "$$(../bin/test.sh $*) _$*";
-
-unreliable: $(UR_TESTS)
+unreliable-test: $(UR_TESTS)

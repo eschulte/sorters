@@ -1,3 +1,5 @@
 *.fasl
 *.in
 *.out
+
+cmp-test

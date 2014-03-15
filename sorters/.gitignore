@@ -26,6 +26,7 @@ insertion-cpp
 insertion-hs
 insertion-ml
 merge-c
+merge_c
 merge-cpp
 merge-hs
 merge-ml
