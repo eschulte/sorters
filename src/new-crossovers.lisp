@@ -114,8 +114,6 @@
       ;; crossover operation (with multiple synapsis context sizes)
       (loop :for (cross-op . cross-name) :in
          (list
-          (cons (lambda (test a b) (similarity-crossover a b :test test))
-                :similarity)
           (cons (lambda (test a b) (synapsing-crossover a b :test test :context 1))
                 :synapsing-1)
           (cons (lambda (test a b) (synapsing-crossover a b :test test :context 2))
@@ -123,13 +121,15 @@
           (cons (lambda (test a b) (synapsing-crossover a b :test test :context 3))
                 :synapsing-3)
           (cons (lambda (test a b) (synapsing-crossover a b :test test :context 4))
-                :synapsing-4)) :do
+                :synapsing-4)
+          (cons (lambda (test a b) (similarity-crossover a b :test test))
+                :similarity)) :do
          (let ((name (format nil "~a-~a-~a-~a"
                              (name (car pair)) (name (cdr pair))
                              (symbol-name metric-name)
                              (symbol-name cross-name))))
            (store (loop :for run :below 512 :collect
-                     (let ((mutant (apply cross-op metric pair)))
+                     (let ((mutant (funcall cross-op metric (car pair) (cdr pair))))
                        (setf (fitness mutant) (functionalp mutant))
                        mutant))
                   (make-pathname :name name
