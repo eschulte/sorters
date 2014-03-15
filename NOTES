@@ -80,8 +80,8 @@ can be done with some subset of the racket executable
 http://stackoverflow.com/questions/194520/creating-standalone-lua-executables
 : luac script.lua -o script.luac
 : bin2c script.luac > code.c
-* Tasks [6/10]
-** TODO Analyze unreliable results [6/9]
+* Tasks [6/11]
+** TODO Analyze unreliable results [6/10]
 *** DONE Initial Runs and Results [5/5]
 **** DONE Error Rate
 1. parse data from raw results
@@ -649,6 +649,9 @@ comparisons at full reliability.
 : 
 
 No strong correlation.
+*** STARTED Specific Flag Runs
+- between bubble O0 and O1
+- between insertion O0 and Os
 
 *** TODO Notable Features/Questions
 - Bubble-O0 *never* fails, where as insertion-O0 fails frequently.
@@ -666,6 +669,7 @@ No strong correlation.
 
 - Insertion-Os and bubble-Os both have much lower failure rates than
   their counterparts.
+
 *** TODO look at information on segfaults
 Maybe use =/lib/libSegFault.so= with =LD_PRELOAD=.
 
