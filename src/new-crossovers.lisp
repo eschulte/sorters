@@ -114,6 +114,9 @@
        (setf (fitness mutant) (functionalp mutant))
        mutant)))
 
+(defvar *experiment-futures* nil
+  "Collect all experimental futures.")
+
 ;; distinct pairs from mergers
 (loop :for pair :in (pairs mergers) :do
    ;; similarity metric
@@ -135,12 +138,14 @@
                                                        ".."
                                                        "results"
                                                        "new-crossover"))))
-                (eager-future2:pexec
-                  (flet ((cross (a b)
-                           (case crossover
-                             (synapsing-crossover
-                              (synapsing-crossover
-                               a b :test metric :context context))
-                             (similarity-crossover
-                              (similarity-crossover a b :test metric)))))
-                    (store (runs (car pair) (cdr pair) #'cross) path)))))))))
+                (push (eager-future2:pexec
+                        (flet ((cross (a b)
+                                 (case crossover
+                                   (synapsing-crossover
+                                    (synapsing-crossover
+                                     a b :test metric :context context))
+                                   (similarity-crossover
+                                    (similarity-crossover
+                                     a b :test metric)))))
+                          (store (runs (car pair) (cdr pair) #'cross) path)))
+                 *experiment-futures*)))))))
