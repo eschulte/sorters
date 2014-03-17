@@ -38,7 +38,7 @@
            (with-temp-file (bin)
              (phenome asm :bin bin)
              (multiple-value-bind (out err errno)
-                 (shell "../bin/test.sh ~a" bin)
+                 (shell "bin/test.sh ~a" bin)
                (declare (ignorable err))
                (when (and (zerop errno) out (stringp out))
                  (parse-number out)))))
@@ -50,7 +50,7 @@
     (with-temp-file (bin)
       (phenome asm :bin bin)
       (multiple-value-bind (out err errno)
-          (shell "../bin/test.sh ~a -t 12000 -p" bin)
+          (shell "bin/test.sh ~a -t 12000 -p" bin)
         (declare (ignorable err))
         (when (zerop errno) (parse-stdout out))))))
 
@@ -117,28 +117,33 @@
 (defvar *experiment-futures* nil
   "Collect all experimental futures.")
 
-;; distinct pairs from mergers
-(loop :for pair :in (pairs mergers) :do
-   ;; similarity metric
-   (loop :for metric
-      :in '(edit-distance component-distance equality-distance) :do
-      ;; crossover operation (with multiple synapsis context sizes)
-      (loop :for crossover :in '(synapsing-crossover similarity-crossover) :do
-         (loop :for context :in '(1 2 3 4) :do
-            (when (or (equal crossover 'synapsing-crossover)
-                      (equal context 1))
-              (let* ((name (format nil "~a-~a-~a-~a-~a"
-                                   (name (car pair)) (name (cdr pair))
-                                   (symbol-name metric)
-                                   (symbol-name crossover)
-                                   context))
-                     (path (make-pathname :name name
-                                          :type "store"
-                                          :directory '(:RELATIVE
-                                                       ".."
-                                                       "results"
-                                                       "new-crossover"))))
-                (push (eager-future2:pexec
+(setf *work-dir* "../sh-runner/work/")
+
+(defun do-run ()
+  ;; distinct pairs from mergers
+  (loop :for pair :in (pairs mergers) :do
+     ;; similarity metric
+     (loop :for metric
+        :in '(edit-distance component-distance equality-distance) :do
+        ;; crossover operation (with multiple synapsis context sizes)
+        (loop :for crossover :in '(synapsing-crossover similarity-crossover) :do
+           (loop :for context :in '(1 2 3 4) :do
+              (when (or (equal crossover 'synapsing-crossover)
+                        (equal context 1))
+                (let* ((name (format nil "~a-~a-~a-~a-~a"
+                                     (name (car pair)) (name (cdr pair))
+                                     (symbol-name metric)
+                                     (symbol-name crossover)
+                                     context))
+                       (path (make-pathname :name name
+                                            :type "store"
+                                            :directory '(:RELATIVE
+                                                         ".."
+                                                         "results"
+                                                         "new-crossover"))))
+                  (unless (probe-file path)
+                    (format t "running ~S~%" name)
+                    (handler-case
                         (flet ((cross (a b)
                                  (case crossover
                                    (synapsing-crossover
@@ -147,5 +152,5 @@
                                    (similarity-crossover
                                     (similarity-crossover
                                      a b :test metric)))))
-                          (store (runs (car pair) (cdr pair) #'cross) path)))
-                 *experiment-futures*)))))))
+                          (store (runs (car pair) (cdr pair) #'cross) path))
+                      (error (e) (format t "Caught error ~S~%" e)))))))))))
