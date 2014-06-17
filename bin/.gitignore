@@ -3,3 +3,6 @@
 *.out
 
 cmp-test
+
+# See https://github.com/eschulte/cil-mutate
+cil-mutate

@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# Print the number of unique cil statements of $1.
+# 
+# Requires ./cil-mutate in this directory.
+#
+CMC=$(dirname $0)/cil-mutate    #  cil-mutate command
+SRC=$1                          #  source file
+COUNT=$($CMC -ids $SRC)
+for i in $(seq $(($COUNT - 1)));do
+    $CMC -show -stmt1 $i $SRC|grep -v "^#"|sha1sum
+done|cut -d' ' -f1|sort -u|wc -l
