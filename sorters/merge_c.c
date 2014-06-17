@@ -6,14 +6,14 @@ void merge (int *a, int *b, int n) {
   int i, *x, *p, *q;
   x = malloc(n * sizeof (int));
   for (i = 0, p = a, q = b; i < n; i++) 
-    x[i] = p == b     ? *q++
-      : q == a + n ? *p++
-      : *p < *q    ? *p++
-      :              *q++;
-  memcpy(a, x, n * sizeof (int));
-  free(x);
+    x[i] = p == b     ? *q++    /* exhausted list a */
+      : q == a + n ? *p++       /* exhausted list b */
+      : *p < *q    ? *p++       /* a  < b */
+      :              *q++;      /* a !< b */
+  memcpy(a, x, n * sizeof (int)); /* move temporary into results */
+  free(x);                        /* free temporary */
 }   
- 
+
 void merge_sort (int *a, int n) {
   int *b, m;
   if (n < 2)
