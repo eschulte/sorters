@@ -154,3 +154,37 @@
                                      a b :test metric)))))
                           (store (runs (car pair) (cdr pair) #'cross) path))
                       (error (e) (format t "Caught error ~S~%" e)))))))))))
+
+(defun do-collect ()
+  (let (results)
+    ;; distinct pairs from mergers
+    (loop :for pair :in (pairs mergers) :do
+       ;; similarity metric
+       (loop :for metric
+          :in '(edit-distance component-distance equality-distance) :do
+          ;; crossover operation (with multiple synapsis context sizes)
+          (loop :for crossover :in '(synapsing-crossover similarity-crossover) :do
+             (loop :for context :in '(1 2 3 4) :do
+                (when (or (equal crossover 'synapsing-crossover)
+                          (equal context 1))
+                  (let* ((name (format nil "~a-~a-~a-~a-~a"
+                                       (name (car pair)) (name (cdr pair))
+                                       (symbol-name metric)
+                                       (symbol-name crossover)
+                                       context))
+                         (path (make-pathname :name name
+                                              :type "store"
+                                              :directory '(:RELATIVE
+                                                           ".."
+                                                           "results"
+                                                           "new-crossover"))))
+                    (when (probe-file path)
+                      (push (list pair metric crossover context (count-if #'fitness (restore path)))
+                            results))))))))
+    results))
+
+;; just ran
+(defvar *results* (do-collect))
+
+;; TODO: save to disk
+(store *results* "/tmp/new-crossovers.store")
