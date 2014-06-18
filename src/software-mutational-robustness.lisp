@@ -62,6 +62,7 @@
                                 representations extensions))
                       sorters)))
     (dotimes (n times)
+      (format t "~d~%" n)
       (mapcar (lambda-bind ((sorter . rep))
                 (test-neutrality-and-log output-file sorter rep))
               all))))
