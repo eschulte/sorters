@@ -44,6 +44,9 @@ echo:
 
 stores: $(OPTS:.s=.store)
 
+%.ll: %.c
+	clang -o $@ -S -emit-llvm $<
+
 %.s: %.c
 	$(CC) -o $@ -S $<
 

@@ -3,6 +3,7 @@ insertion
 merge
 merge-broke
 quick
+*.ll
 *.s
 *.o
 *.cmo
