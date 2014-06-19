@@ -1,0 +1,205 @@
+#+Title: Higher Order Random and Neutral Search
+#+Author: Eric Schulte
+#+Date: <2013-10-08 Tue>
+#+HTML_HEAD: <style>pre{background:#232323; color:#E6E1DC;} @media(min-width:800px){div#content{max-width:800px; padding:2em; margin:auto;}}</style>
+
+* Introduction
+An experiment proposed by Wes.
+
+Use both a GA, and random mutation (including higher order mutants
+with an order distribution matching that found through the GA) to
+collect neutral mutants.
+
+For *every* variant tested save the mutations and the fitness.
+#+begin_src lisp :exports none
+  (defun convert-mutations-to-ancestor-lengths (var)
+    `((:mutations . ,(ancestor-length (aget :mutations var)))
+      ,(assoc :fitness var)))
+
+  ;;; load results from archived files
+  (defvar gp-results
+    (mapcar #'convert-mutations-to-ancestor-lengths
+            (restore "/tmp/horns-results/gp/quick_c.muts.store")))
+
+  (defvar rand-results
+    (mapcar #'convert-mutations-to-ancestor-lengths
+            (restore "/tmp/horns-results/rand/quick_c.muts.store")))
+#+end_src
+
+* Setup
+Use a fitness budget of roughly 1/4 million fitness evaluations for
+both the GP and random search techniques (slight difference due to
+halting multiple execution threads).
+
+#+begin_src lisp
+  (length gp-results)                     ; => 262237
+  (length rand-results)                   ; => 262144
+#+end_src
+
+Roughly the same number of mutations applied in each search.  This is
+because for each individual generated through random search the number
+of mutations to apply is determined by selecting an individual at
+random from the GP results, and applying that many mutations.
+
+#+begin_src lisp
+  (reduce #'+ (mapcar {aget :mutations} gp-results))   ; => 10932430
+  (reduce #'+ (mapcar {aget :mutations} rand-results)) ; => 10940794
+#+end_src
+
+Hence the order distributions are very similar.
+
+file:data/horns/tested-distribution.svg
+
+* Results
+As expected we find many more neutral variants with GP than with
+random search.
+
+#+begin_src lisp
+  (count-if [{= 10} {aget :fitness}] gp-results)   ; => 28055
+  (count-if [{= 10} {aget :fitness}] rand-results) ; => 1342
+#+end_src
+
+This difference is especially pronounced when at multiple edits from
+the original program.
+
+file:data/horns/neutral-variants.svg
+
+The percentage of higher order variants which are neutral decreases
+sharply with random search, but increases slightly with GP (probably
+due to bloat and/or the population settling in a higher mutational
+robustness portion of the neutral space).
+
+#+begin_src lisp
+  (defun percents (results)
+    (mapcar
+     (lambda (count)
+       (let ((w/count (remove-if-not [{= count} {aget :mutations}] results)))
+         (cons count (/ (count-if [{= 10} {aget :fitness}] w/count)
+                        (length w/count)))))
+     (mapcar #'car (counts (mapcar {aget :mutations} results)))))
+
+  (defvar gp-percs   (percents gp-results))
+  (defvar rand-percs (percents rand-results))
+#+end_src
+
+#+begin_src lisp
+  (defun to-file (file results)
+    (with-open-file (out file :direction :output)
+      (format out "~{~{~a~^ ~}~^~%~}~%"
+              (mapcar (lambda (pair) (list (car pair) (float (cdr pair))))
+                      (sort results #'< :key #'car)))))
+
+  (to-file "/tmp/gp-mut-percs.txt"   gp-percs)
+  (to-file "/tmp/rand-mut-percs.txt" rand-percs)
+#+end_src
+
+file:data/horns/mutational-robustness.svg
+
+* The pattern random mutants
+The rate of decline in neutrality as the order of mutation increases
+is a near-perfect fit to the exponent of the original mutational
+robustness.  This indicates that at each step the vast majority of
+neutral variants are those whose predecessor was also neutral.
+
+#+name: neutrality-by-random-step
+#+begin_src lisp :results output table :cache yes :exports both
+  (loop :for i :upto 4 :do
+     (let* ((by-size (remove-if-not [{= i} #'length {aget :mutations}] results))
+            (neut-by-size (remove-if-not [{= 10} {aget :fitness}] by-size)))
+       (format t "~a ~a ~a ~a~%" i (length by-size) (length neut-by-size)
+               (float (/ (length neut-by-size) (length by-size))))))
+#+end_src
+
+#+name: neutrality-by-random-step-already
+| 0 |      1 |     1 |         1.0 |
+| 1 | 262171 | 93941 |  0.35831958 |
+| 2 | 261780 | 33787 |   0.1290664 |
+| 3 | 263037 | 12458 |  0.04736216 |
+| 4 | 261733 |  4478 | 0.017109038 |
+
+#+begin_src gnuplot :var data=neutrality-by-random-step-already :results silent :file ~/school/dissertation/neutrality-by-random-step.tex
+  set term tikz
+  set xtics 1
+  # set title "neutrality of random mutants by # mutations from original"
+  set ylabel "Fraction of Variants which are Neutral"
+  set xlabel "Number of Mutations from Original Program"
+  plot (0.35831 ** x) lw 2 t "0.35831^{x}", data u 1:4 t "Fraction Found Neutral Experimentally" ls 3 lw 3
+#+end_src
+
+file:data/horns/neutrality-by-random-step.svg
+
+* /Interesting/ higher-order neutral variants
+How many higher order neutral variants are /interesting/, meaning they
+have ancestors which are *not* neutral.
+#+begin_src lisp
+  (length higher-order-neutral-variants)             ; => 50691
+  (length interesting-higher-order-neutral-variants) ; => 399
+#+end_src
+
+Interesting higher order neutral variants broken out by order.
+#+begin_src lisp
+  (let ((by-order-all (mapcar [#'length {aget :mutations} {aget :base}]
+                              higher-order-neutral-variants))
+        (by-order-int (mapcar [#'length {aget :mutations} {aget :base}]
+                              interesting-higher-order-neutral-variants)))
+    (mapcar (lambda (num) (list num
+                           (count num by-order-all)
+                           (count num by-order-int)))
+            '(2 3 4)))
+#+end_src
+
+| order | # total neutral variants | # interesting neutral variants | % interesting |
+|-------+--------------------------+--------------------------------+---------------|
+|     2 |                    33787 |                            139 |    0.41140083 |
+|     3 |                    12458 |                            153 |     1.2281265 |
+|     4 |                     4478 |                            107 |     2.3894596 |
+#+TBLFM: $4=100*($3/$2)
+
+Lets eliminate interesting variants which improve fitness with
+mutations that touch previously mutated locations in the ASM file (as
+these most likely just revert previous breaking mutations or "step
+back" into the same place in the neutral space from which they came).
+#+begin_src lisp
+  (defvar really-interesting-higher-order-neutral-variants
+    (remove-if-not #'really-interesting-transitions
+                   interesting-higher-order-neutral-variants))
+  (length really-interesting-higher-order-neutral-variants) ; => 199
+#+end_src
+
+So about half of our interesting higher order neutral mutants were
+mere reversions of their non-neutral ancestors.
+
+Looking more closely at some of these really interesting,
+non-reversion, higher order neutral variants they do look to be
+genuinely interesting.
+
+1. The first takes two partial steps back towards neutral from a
+   fitness of only 3
+   #+begin_src lisp
+     (mapcar {mapcar #'cdr}
+             (all-ancestors
+              (first really-interesting-higher-order-neutral-variants)))
+   #+end_src
+
+   | Fitness | Mutations                           |
+   |---------+-------------------------------------|
+   |      10 | ((:CUT 71) (:CUT 27) (:SWAP 49 41)) |
+   |       4 | ((:CUT 27) (:SWAP 49 41))           |
+   |       3 | ((:SWAP 49 41))                     |
+
+2. A cut in the second brings the variants from no fitness to fully
+   neutral.
+   #+begin_src lisp
+     (mapcar {mapcar #'cdr}
+             (all-ancestors
+              (second really-interesting-higher-order-neutral-variants)))
+   #+end_src
+
+   | Fitness | Mutation                                       |
+   |---------+------------------------------------------------|
+   |      10 | ((:CUT 125) (:INSERT 13 98) (:INSERT 145 121)) |
+   |       0 | ((:INSERT 13 98) (:INSERT 145 121))            |
+   |       0 | ((:INSERT 145 121))                            |
+
+* Reproduction
+(see [[https://github.com/eschulte/sorters/blob/master/src/horns.lisp][horns.lisp]] and @@html:<a href="./horns.org">horns.org</a>@@)
