@@ -203,3 +203,31 @@ genuinely interesting.
 
 * Reproduction
 (see [[https://github.com/eschulte/sorters/blob/master/src/horns.lisp][horns.lisp]] and @@html:<a href="./horns.org">horns.org</a>@@)
+* COMMENT Additional Calculations
+** Distribution Figure
+#+begin_src lisp
+  (to-file "/tmp/gp-dist.txt" (counts (mapcar {aget :mutations} gp-results)))
+  (to-file "/tmp/rand-dist.txt" (counts (mapcar {aget :mutations} rand-results)))
+#+end_src
+
+#+begin_src gnuplot :file ~/school/dissertation/neut-distributions.tex
+  set term tikz
+  set ylabel "Number of Variants Tested"
+  set xlabel "Number of Applied Mutations"
+  plot "/tmp/gp-dist.txt" lw 2 t "Neutral Walk", "/tmp/rand-dist.txt" lw 2 t "Random Walk"
+#+end_src
+
+#+RESULTS:
+[[file:~/school/dissertation/neut-distributions.tex]]
+
+** Comparative Neutrality Figure
+#+begin_src gnuplot :file ~/school/dissertation/comparative-neutrality.tex
+  set term tikz
+  set ylabel "Fraction of Variants Tested found Neutral"
+  set xlabel "Number of Applied Mutations"
+  plot "< head -100 /tmp/gp-mut-percs.txt" lw 2 t "Neutral Walk", "< head -100 /tmp/rand-mut-percs.txt" lw 2 t "Random Walk"
+#+end_src
+
+#+RESULTS:
+[[file:~/school/dissertation/comparative-neutrality.tex]]
+
