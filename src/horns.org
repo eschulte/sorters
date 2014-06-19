@@ -230,4 +230,14 @@ genuinely interesting.
 
 #+RESULTS:
 [[file:~/school/dissertation/comparative-neutrality.tex]]
+** rates of interesting neutral variants
+percentage of variants which are neutral at 2-4 steps from the
+original
+#+begin_src lisp
+  (float
+   (/ (count-if [{= 10} {aget :fitness}] (remove-if-not [{member _ '(2 3 4)} {aget :mutations}] rand-results))
+      (count-if [{member _ '(2 3 4)} {aget :mutations}] rand-results)))
+#+end_src
 
+#+RESULTS:
+: 0.06309996
