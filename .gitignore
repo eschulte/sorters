@@ -18,7 +18,6 @@ out
 results
 gen.*
 runs
-*.conf
 *.my
 0*
 *.path
