@@ -38,6 +38,16 @@
              (and (zerop errno) (parse-integer stdout)))))
         -1)))
 
+(defun do-trace (variant)
+  (with-temp-file (trace ".trace")
+    (let ((inst (instrument (copy variant) trace)))
+      (assert (= 10 (test inst))
+              (inst)
+              "Variant should pass all tests during tracing.")
+      (mapcar #'parse-integer
+              (split-sequence #\Newline
+                (file-to-string trace) :remove-empty-subseqs t)))))
+
 (defun test-neutrality-and-log (output-file sorter rep)
   "Perform a single neutrality test and log the output."
   (with-open-file (out output-file :direction :output
