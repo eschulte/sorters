@@ -1,0 +1,72 @@
+#+Title: Software Mutational Robustness across Representations
+#+Author: Eric Schulte
+#+Date: <2014-06-19 Thu>
+#+Property: var data="../results/software-mutational-robustness.txt"
+#+HTML_HEAD: <style>pre{background:#232323; color:#E6E1DC;} @media(min-width:800px){div#content{max-width:800px; padding:2em; margin:auto;}}</style>
+
+* Rates of Software Mutational Robustness
+
+#+begin_src sh
+  total(){
+      grep $1 $data|cut -d' ' -f3|wc -l; }
+
+  neutral(){
+      grep $1 $data|cut -d' ' -f3|grep 10|wc -l; }
+
+  for rep in CLANG CIL LLVM ASM ELF;do
+      echo -e "$rep\t$(neutral $rep)\t$(total $rep)"
+  done
+#+end_src
+
+#+RESULTS:
+| representation | neutral | total | mut-rb |
+|----------------+---------+-------+--------|
+| CLANG          |     125 |  4000 |   3.12 |
+| CIL            |     563 |  4000 |  14.07 |
+| LLVM           |    1402 |  4000 |  35.05 |
+| ASM            |    1409 |  4000 |  35.23 |
+| ELF            |     631 |  4000 |  15.78 |
+#+TBLFM: $4=100 * ($2/$3);%.2f
+
+* Fitness Distributions
+Using enhanced join from https://github.com/eschulte/cl-join.
+#+begin_src bash
+  fits(){
+      grep $1 $data|cut -d' ' -f3|sort|uniq -c|awk '{print $2,$1}'; }
+  ~/bin/join -e '0' <(fits CLANG) <(fits CIL) <(fits LLVM) <(fits ASM) <(fits ELF)
+#+end_src
+
+#+name: distributions
+| Fitness | CLANG |  CIL | LLVM |  ASM |  ELF |
+|---------+-------+------+------+------+------|
+|       0 |  3466 | 2445 | 1851 | 1403 | 2847 |
+|       1 |    69 |   28 |  134 |   98 |   56 |
+|       2 |   120 |  429 |  258 |  518 |  233 |
+|       3 |   191 |  448 |  292 |  474 |  195 |
+|       4 |    21 |   44 |   35 |   66 |   27 |
+|       5 |     4 |   22 |   11 |   25 |    7 |
+|       6 |     0 |   12 |    0 |    3 |    0 |
+|       7 |     4 |    4 |   12 |    3 |    0 |
+|       8 |     0 |    2 |    5 |    1 |    2 |
+|       9 |     0 |    3 |    0 |    0 |    2 |
+|      10 |   125 |  563 | 1402 | 1409 |  631 |
+
+#+begin_src gnuplot :var data=distributions :file ~/school/dissertation/fitness-distributions.tex
+set term tikz
+set style fill pattern
+set style data histogram
+set style fill solid 1 border lt -1
+set style histogram
+set boxwidth 1
+set style fill pattern
+set ylabel "Number of Variants"
+set xlabel "Fitness"
+plot data u 2:xtic(1) t 'CLANG', \
+     ''   u 3:xtic(1) t 'CIL', \
+     ''   u 4:xtic(1) t 'LLVM', \
+     ''   u 5:xtic(1) t 'ASM', \
+     ''   u 6:xtic(1) t 'ELF'
+#+end_src
+
+#+RESULTS:
+[[file:~/school/dissertation/fitness-distributions.tex]]
