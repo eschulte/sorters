@@ -23,6 +23,9 @@
 (defvar *asm* (from-file (make-instance 'asm) "sorters/merge_c.s")
   "The original program represented using ASM.")
 
+(defvar *elf* (from-file (make-instance 'elf-x86-sw) "sorters/merge_c")
+  "The original program represented using ELF.")
+
 #+(or )
 (defvar *work-dir* "sh-runner/work/"
   "Needed because SBCL chokes after too many shell outs.")
@@ -59,15 +62,19 @@
           (format out "~d ~a~%" (test variant) edit))
       (error (e) (format out "~d ~a~%" -1 e)))))
 
-(defun software-mutational-robustness (output-file &key (times 1000))
-  (let* ((representations (list 'clang 'cil 'llvm 'asm))
-         (extensions (list "c" "c" "ll" "s"))
+(defun software-mutational-robustness (output-file &key (times 1000) only-reps)
+  "Calculate the mutational robustness for all program representations.
+Save results to OUTPUT-FILE.  Keyword TIMES specifies the number of
+trials for each sorter/representation pair.  Keyword ONLY-REPS limits
+the test to the specified representations."
+  (let* ((representations (list 'clang 'cil 'llvm 'asm 'elf-x86-sw))
+         (extensions (list ".c" ".c" ".ll" ".s" ""))
          (sorters (list "bubble" "insertion" "merge" "quick"))
          (all (mapcan (lambda (sorter)
                         (mapcar (lambda (rep ext)
                                   (cons sorter
                                         (from-file (make-instance rep)
-                                                   (format nil "sorters/~a_c.~a"
+                                                   (format nil "sorters/~a_c~a"
                                                            sorter ext))))
                                 representations extensions))
                       sorters)))
@@ -75,4 +82,6 @@
       (format t "~d~%" n)
       (mapcar (lambda-bind ((sorter . rep))
                 (test-neutrality-and-log output-file sorter rep))
-              all))))
+              (if only-reps
+                  (remove-if-not [{member _ only-reps} #'type-of #'cdr] all)
+                  all)))))
