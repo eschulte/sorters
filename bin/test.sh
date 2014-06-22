@@ -6,7 +6,6 @@
 # OPTIONS:
 #   -t,--test --- the specific test to run
 #                 (otherwise print # passed)
-#   -E,--error -- return non-0 if any failures
 #   -p,--perf --- return profiling information
 #   -e,--events - list of perf events
 #   -i,--ind ---- return a score for each individual test
@@ -17,7 +16,6 @@
 #
 BASE="$(dirname $0)"
 TEST=""
-ERROR=""
 PERF=""
 IND=""
 CMP=""
@@ -35,14 +33,13 @@ HELP_TEXT=$(cat "$0" \
         |cut -c3-)
 if [ $(grep "\-h" <(echo "$1")) ];then echo "$HELP_TEXT"; exit 0; fi
 
-eval set -- $(getopt -o ht:epicrL -l help,test:,error,perf,ind,cmp,raw,no-limit -- "$@" \
+eval set -- $(getopt -o ht:picrL -l help,test:,perf,ind,cmp,raw,no-limit -- "$@" \
     || echo "$HELP_TEXT" && exit 1;)
 
 while [ $# -gt 0 ];do
     case $1 in
         -h|--help) echo "$HELP_TEXT" && exit 0;;
         -t|--test) TEST="$2"; shift;;
-        -e|--error) ERROR="yes";;
         -p|--perf) PERF="yes";;
         -i|--ind) IND="yes";;
         -c|--cmp) CMP="yes";;
@@ -120,7 +117,6 @@ OUTPUTS[7]="2 20 69 70 75 80 82 82 90 92 94 101 108 112 113 158 185 219 252 277 
 OUTPUTS[8]="8268 11362 12491 14862 28075 34709 36390 40124 41004 43942 45069 49152 50384 54376 58155 60325 63673 72379 78637 94598"
 OUTPUTS[9]="0 0 0 0 1 1 1 1 1 1"
 
-CLEAN=0
 if [ -z "$TEST" ];then
     if [ -z $IND ];then
         passed=0
@@ -129,9 +125,6 @@ if [ -z "$TEST" ];then
     fi
     for t in {0..9};do
         ERR=$(run $t)
-        if [ ! $ERR -eq 0 ];then
-            CLEAN=$ERR
-        fi
         if [ -z $IND ];then
             if [ $ERR -eq 0 ];then
                 passed=$(($passed + 1))
@@ -156,9 +149,6 @@ if [ -z "$TEST" ];then
     fi
 else
     ERR=$(run $TEST)
-    if [ ! $ERR -eq 0 ];then
-        CLEAN=$ERR
-    fi
     if [ -z "$PERF" ];then
         echo $ERR
     else
@@ -167,4 +157,3 @@ else
     fi
 fi
 rm -f $PERF_FILE
-exit $CLEAN
