@@ -25,3 +25,19 @@ Requirements
   [2] https://github.com/eschulte/software-evolution
   [3] https://github.com/eschulte/cil-mutate
   [4] https://github.com/eschulte/clang-mutate
+
+Citation
+
+  Please cite Eric Schulte's Ph.D. dissertation when you publish
+  results that you have obtained with this repository.
+
+    @phdthesis{schulte2014dissertation,
+      author  = {Eric Schulte},
+      title   = {Neutral Networks of Real-World Programs and their
+                      Application to Automated Software Evolution},
+      school  = {University of New Mexico},
+      address = {Albuquerque, USA},
+      month   = {July},
+      year    = {2014},
+      note    = {https://cs.unm.edu/~eschulte/dissertation}
+    }
