@@ -1,39 +1,32 @@
 #! /usr/sbin/gforth
-( Capitalize the contents of /tmp/lorem.in and write to /tmp/lorem.out )
+
 512 constant max-line
 32  constant ascii-space
 
-0 Value fd-in
-0 Value fd-out
-
 create line-buffer max-line 2 + allot
 
-: open-input ( addr u -- )  r/o open-file throw to fd-in ;
-: open-output ( addr u -- )  w/o create-file throw to fd-out ;
+: open-input ( addr u -- ) r/o open-file throw ;
+: close-input ( addr -- ) close-file throw ;
 
-: ?ascii-space ( char -- bool ) 32 = ;
-: ?lower-case ( char -- bool ) 96 > ;
+: check-args ( addr u -- )
+    2dup 0= swap 0= and if ." USAGE: caps input-file output-file" cr bye then ;
 
 : cap-line-buffer ( u -- )
     line-buffer + line-buffer do
-        i    c@ ?ascii-space
-        i 1+ c@ ?lower-case
+        i    c@ ascii-space =
+        i 1+ c@ 96 >
         and if
             i 1+ c@ 32 - i 1+ c!
         then
     loop ;
 
-: caps ( -- )
+: print-caps ( fd-in -- )
     begin
-        line-buffer max-line fd-in read-line throw
+        dup line-buffer max-line rot read-line throw
         over 0 > if over cap-line-buffer then
     while
-        line-buffer swap fd-out write-line throw
-    repeat ;
+        line-buffer swap type cr
+    repeat
+    drop ;
 
-s" /tmp/lorem.in" open-input
-s" /tmp/lorem.out" open-output
-caps
-fd-in close-file throw
-fd-out close-file throw
-bye
+next-arg check-args open-input print-caps close-input bye
