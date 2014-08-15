@@ -5,12 +5,13 @@
 argc @ 1- constant len
 variable lst len cells allot
 
-: bubble { addr cnt -- }
-    cnt 1 do
-        addr cnt i - cells bounds do
+: bubble
+    dup 1 do
+        2dup
+        i - cells bounds do
             i 2@ < if i 2@ swap i 2! then
         cell +loop
-    loop ;
+    loop 2drop ;
 
 : arg-to-number ( adrr u -- ) 0 rot rot 0 rot rot >number 2drop drop ;
 
